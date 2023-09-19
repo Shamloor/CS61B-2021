@@ -36,6 +36,8 @@
                     <compilerArgs>
                         <arg>-J-XX:+ShowCodeDetailsInExceptionMessages</arg>
                     </compilerArgs>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>
