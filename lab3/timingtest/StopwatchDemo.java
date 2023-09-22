@@ -17,11 +17,19 @@ public class StopwatchDemo {
         return fib(n - 1) + fib(n - 2);
     }
 
-    public static void main(String[] args) {
-        Stopwatch sw = new Stopwatch();
-        int fib41 = fib(41);
-        double timeInSeconds = sw.elapsedTime();
-        System.out.println("The 50th fibonacci number is " + fib41);
-        System.out.println("Time taken to compute 41st fibonacci number: " + timeInSeconds + " seconds.");
+    public static void main(String[] args) throws InterruptedException {
+        
+        for (int i = 4; i < 50; i += 5 ) {
+            
+            Stopwatch sw = new Stopwatch();
+            if (i == 9) {
+                Thread.sleep(3000);
+            }
+            int fib41 = fib(i);
+            
+            double timeInSeconds = sw.elapsedTime();
+            System.out.println("The 50th fibonacci number is " + fib41);
+            System.out.println("Time taken to compute 41st fibonacci number: " + timeInSeconds + " seconds.");
+        }
     }
 }
