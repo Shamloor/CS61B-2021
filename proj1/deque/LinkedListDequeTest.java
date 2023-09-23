@@ -1,6 +1,10 @@
 package deque;
 
+import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
+
+import java.util.Optional;
+
 import static org.junit.Assert.*;
 
 
@@ -116,4 +120,5 @@ public class LinkedListDequeTest {
             assertEquals("Should have the same value", i, (double) lld1.removeLast(), 0.0);
         }
     }
+    
 }
