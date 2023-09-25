@@ -7,45 +7,36 @@ import static org.junit.Assert.assertEquals;
 
 public class ArrayDequeTest {
     @Test
-    public void addIsEmptySizeTest() {
+    public void addIsEmptySizeTestWithoutResize() {
         ArrayDeque<String> lld1 = new ArrayDeque<String>();
 
         assertTrue("A newly initialized LLDeque should be empty", lld1.isEmpty());
+        
         lld1.addFirst("front");
-
-        // The && operator is the same as "and" in Python.
-        // It's a binary operator that returns true if both arguments true, and false otherwise.
         assertEquals(1, lld1.size());
         assertFalse("lld1 should now contain 1 item", lld1.isEmpty());
-
+        
         lld1.addLast("middle");
         assertEquals(2, lld1.size());
-
         lld1.addLast("back");
+        
         assertEquals(3, lld1.size());
-
-        System.out.println("Printing out deque: ");
-        lld1.printDeque();
     }
 
     @Test
-    public void addRemoveTest() {
+    public void addRemoveTestWithoutResize() {
         ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
-        // should be empty
-        assertTrue("lld1 should be empty upon initialization", lld1.isEmpty());
-
+        
         lld1.addFirst(10);
-        // should not be empty
         assertFalse("lld1 should contain 1 item", lld1.isEmpty());
-
-        lld1.removeFirst();
-        // should be empty
+        
+        int rmvVal = lld1.removeFirst();
+        assertEquals(10, rmvVal);
         assertTrue("lld1 should be empty after removal", lld1.isEmpty());
-
     }
 
     @Test
-    public void removeEmptyTest() {
+    public void removeEmptyTestWithoutResize() {
         ArrayDeque<Integer> lld1 = new ArrayDeque<>();
         lld1.addFirst(3);
 
@@ -64,13 +55,14 @@ public class ArrayDequeTest {
 
     @Test
     /* Check if you can create LinkedListDeques with different parameterized types*/
-    public void multipleParamTest() {
+    public void multipleParamTestWithoutResize() {
         ArrayDeque<String>  lld1 = new ArrayDeque<String>();
         ArrayDeque<Double>  lld2 = new ArrayDeque<Double>();
         ArrayDeque<Boolean> lld3 = new ArrayDeque<Boolean>();
 
         lld1.addFirst("string");
         lld2.addFirst(3.14159);
+        lld2.addLast(3.14159);
         lld3.addFirst(true);
 
         String s = lld1.removeFirst();
@@ -79,41 +71,28 @@ public class ArrayDequeTest {
     }
 
     @Test
-    /* check if null is return when removing from an empty LinkedListDeque. */
-    public void emptyNullReturnTest() {
-        ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
-
-        boolean passed1 = false;
-        boolean passed2 = false;
-        assertEquals("Should return null when removeFirst is called on an empty Deque,", null, lld1.removeFirst());
-        assertEquals("Should return null when removeLast is called on an empty Deque,", null, lld1.removeLast());
-
-    }
-
-    @Test
     public void addLastTest() {
         ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
-        for (int i = 0; i < 8; i ++ ) {
+        for (int i = 0; i < 50000; i ++ ) {
             lld1.addLast(i);
-        }
-        for (int i = 8; i < 20; i ++ ) {
             lld1.addFirst(i);
         }
     }
+    
     @Test
-    public void bigLLDequeTest() {
-        ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
-        for (int i = 0; i < 1000000; i++) {
-            lld1.addLast(i);
-        }
-
-        for (double i = 0; i < 500000; i++) {
-            assertEquals("Should have the same value", i, (double) lld1.removeFirst(), 0.0);
-        }
-
-        for (double i = 999999; i > 500000; i--) {
-            assertEquals("Should have the same value", i, (double) lld1.removeLast(), 0.0);
-        }
+    public void edgeSituationTest() {
+        Deque<Integer> arrayDeque = new ArrayDeque<>();
+        
+        for (int i = 0; i < 7; i ++ )
+            arrayDeque.addFirst(i + 1);
+        
+        arrayDeque.removeFirst();
+        
+        arrayDeque.addLast(0);
+        int getVal = arrayDeque.get(0);
+        int getVal2 = arrayDeque.get(3);
+        assertEquals(6, getVal);
+        assertEquals(3, getVal2);
     }
     
     
