@@ -28,7 +28,7 @@ public class ArrayDeque<T> implements Deque<T> {
      *  */
     public void resize(int capacity) {
         T[] a = (T[]) new Object[capacity];
-        for (int i = first + 1, j = 1; i <= first + size; i ++ , j ++ ) {
+        for (int i = first + 1, j = 1; i <= first + size; i++ , j++) {
             a[j] = items[i % items.length];
         }
         items = a;
@@ -83,7 +83,7 @@ public class ArrayDeque<T> implements Deque<T> {
     @Override
     public void printDeque() {
         resize(items.length);
-        for (int i = 1; i <= size; i ++ ) {
+        for (int i = 1; i <= size; i++) {
             System.out.println(items[i] + " ");
         }
     }
@@ -95,7 +95,9 @@ public class ArrayDeque<T> implements Deque<T> {
      * */
     @Override
     public T removeFirst() {
-        if (size == 0) return null;
+        if (size == 0) {
+            return null;
+        }
         
         T removeVal = items[(first + 1) % items.length];
         items[(first + 1) % items.length] = null;
@@ -112,7 +114,9 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public T removeLast() {
-        if (size == 0) return null;
+        if (size == 0) {
+            return null;
+        }
         
         T removeVal = items[(last - 1 + items.length) % items.length];
         items[(last - 1 + items.length) % items.length] = null;
@@ -131,7 +135,6 @@ public class ArrayDeque<T> implements Deque<T> {
     public T get(int index) {
         return items[(index + first + 1) % items.length];
     }
-    /
     
     
     public Iterator<T> iterator() {
@@ -156,7 +159,7 @@ public class ArrayDeque<T> implements Deque<T> {
         if (o.getClass() != this.getClass()) return false;
         ArrayDeque<T> other = (ArrayDeque<T>) o;
         if (other.size() != this.size()) return false;
-        for (int i = 0; i < this.size(); i ++ ) {
+        for (int i = 0; i < this.size(); i++) {
             if (other.get(i) != this.get(i)) return false;
         }
         return true;
