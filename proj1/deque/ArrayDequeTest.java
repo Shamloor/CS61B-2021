@@ -2,6 +2,8 @@ package deque;
 
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
@@ -94,6 +96,4 @@ public class ArrayDequeTest {
         assertEquals(6, getVal);
         assertEquals(3, getVal2);
     }
-    
-    
 }

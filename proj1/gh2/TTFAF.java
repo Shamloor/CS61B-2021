@@ -17,7 +17,11 @@ public class TTFAF {
         try {
             InputStream source = new ByteArrayInputStream(Base64.getDecoder().decode(TTFAF));
             source = new GZIPInputStream(source);
-            GuitarPlayer player = new GuitarPlayer(source);
+//            GuitarPlayer player = new GuitarPlayer(source);
+//            GuitarPlayer player = new GuitarPlayer(new java.io.File("D:/download/Unwelcome_School.mid"));
+//            GuitarPlayer player = new GuitarPlayer(new java.io.File("D:/download/Undertale_-_Megalovania_Piano_ver._3.mid"));
+//            GuitarPlayer player = new GuitarPlayer(new java.io.File("D:/download/POWDER_SNOW_-_Suara.mid"));
+            GuitarPlayer player = new GuitarPlayer(new java.io.File("D:/download/Unravel__TK_From_Ling_Tosite_Sigure_Unravel_-_Tokyo_Ghoul_OP__Toru_KitajimaTK_-_arr._Animenz_-_Piano.mid"));
             player.play();
         } catch (IOException e) {
             e.printStackTrace();
