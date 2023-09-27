@@ -142,8 +142,9 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     private class ArrayDequeIterator implements Iterator<T> {
-        int wizPos;
-        public ArrayDequeIterator() {
+        private int wizPos;
+        // Set constructor to private.
+        private ArrayDequeIterator() {
             wizPos = 0;
         }
         @Override
@@ -162,18 +163,17 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (o == null) {
             return false;
         }
-        if (o.getClass() != this.getClass()) {
-            return false;
-        }
         ArrayDeque<T> other = (ArrayDeque<T>) o;
         if (other.size() != this.size()) {
             return false;
         }
         for (int i = 0; i < this.size(); i++) {
-            if (other.get(i) != this.get(i)) {
+            if (!other.get(i).equals(this.get(i))) {
                 return false;
             }
         }
         return true;
     }
+    
+    
 }

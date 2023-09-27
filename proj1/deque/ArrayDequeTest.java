@@ -93,4 +93,21 @@ public class ArrayDequeTest {
         assertEquals(6, getVal);
         assertEquals(3, getVal2);
     }
+    
+    @Test
+    public void equalsTest() {
+        Deque<Integer> arrayDeque = new ArrayDeque<>();
+        Deque<Integer> cmpDeque = new ArrayDeque<>();
+        arrayDeque.addFirst(17);
+        arrayDeque.addFirst(18);
+        arrayDeque.addFirst(19);
+        
+        cmpDeque.addFirst(17);
+        cmpDeque.addFirst(18);
+        cmpDeque.addFirst(19);
+        
+        
+        assertTrue("Two deques are the same.", arrayDeque.equals(cmpDeque));
+        
+    }
 }

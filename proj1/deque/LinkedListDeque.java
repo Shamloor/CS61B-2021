@@ -117,7 +117,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     
     private class LinkedListDequeIterator implements Iterator<T> {
         private int wizPos;
-        public LinkedListDequeIterator() {
+        private LinkedListDequeIterator() {
             wizPos = 0;
         }
         @Override
@@ -136,16 +136,13 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         if (o == null) {
             return false;
         }
-        if (o.getClass() != this.getClass()) {
-            return false;
-        }
-        
         LinkedListDeque<T> other = (LinkedListDeque<T>) o;
         if (other.size() != this.size()) {
             return false;
         }
         for (int i = 0; i < this.size(); i++) {
-            if (this.get(i) != other.get(i)) {
+            // Use equals !!!
+            if (!other.get(i).equals(this.get(i))) {
                 return false;
             }
         }
