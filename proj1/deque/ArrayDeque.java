@@ -3,7 +3,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private T[] items;
     private int size;
     /** Two pointers : first and last.
@@ -26,9 +26,9 @@ public class ArrayDeque<T> implements Deque<T> {
      *  
      *  Variable first 
      *  */
-    public void resize(int capacity) {
+    private void resize(int capacity) {
         T[] a = (T[]) new Object[capacity];
-        for (int i = first + 1, j = 1; i <= first + size; i++ , j++) {
+        for (int i = first + 1, j = 1; i <= first + size; i++, j++) {
             a[j] = items[i % items.length];
         }
         items = a;
@@ -105,7 +105,7 @@ public class ArrayDeque<T> implements Deque<T> {
         
         first = (first + 1) % items.length;
         
-        if(size < items.length / 4 && size > 4) {
+        if (size < items.length / 4 && size > 4) {
             resize(items.length / 4);
         }
         
@@ -124,7 +124,7 @@ public class ArrayDeque<T> implements Deque<T> {
         
         last = (last - 1 + items.length) % items.length;
         
-        if(size < items.length / 4 && size > 4) {
+        if (size < items.length / 4 && size > 4) {
             resize(items.length / 4);
         }
         
@@ -143,9 +143,13 @@ public class ArrayDeque<T> implements Deque<T> {
 
     private class ArrayDequeIterator implements Iterator<T> {
         int wizPos;
-        public ArrayDequeIterator() {wizPos = 0;}
+        public ArrayDequeIterator() {
+            wizPos = 0;
+        }
         @Override
-        public boolean hasNext() {return wizPos < size;}
+        public boolean hasNext() {
+            return wizPos < size;
+        }
         @Override
         public T next() {
             T returnItem = items[wizPos];
@@ -155,12 +159,20 @@ public class ArrayDeque<T> implements Deque<T> {
     }
     
     public boolean equals(Object o) {
-        if (o == null) return false;
-        if (o.getClass() != this.getClass()) return false;
+        if (o == null) {
+            return false;
+        }
+        if (o.getClass() != this.getClass()) {
+            return false;
+        }
         ArrayDeque<T> other = (ArrayDeque<T>) o;
-        if (other.size() != this.size()) return false;
+        if (other.size() != this.size()) {
+            return false;
+        }
         for (int i = 0; i < this.size(); i++) {
-            if (other.get(i) != this.get(i)) return false;
+            if (other.get(i) != this.get(i)) {
+                return false;
+            }
         }
         return true;
     }
