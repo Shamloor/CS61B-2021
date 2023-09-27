@@ -82,12 +82,14 @@ public class ArrayDequeTest {
     public void edgeSituationTest() {
         Deque<Integer> arrayDeque = new ArrayDeque<>();
         
-        for (int i = 0; i < 7; i ++ )
+        for (int i = 0; i < 9; i ++ )
             arrayDeque.addFirst(i + 1);
         
         arrayDeque.removeFirst();
+        arrayDeque.removeFirst();
         
         arrayDeque.addLast(0);
+        arrayDeque.addLast(18);
         int getVal = arrayDeque.get(0);
         int getVal2 = arrayDeque.get(3);
         assertEquals(6, getVal);
