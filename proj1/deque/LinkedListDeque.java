@@ -101,7 +101,6 @@ public class LinkedListDeque<T> implements Deque<T> {
     }
     
     //public Iterator<T> iterator() {}
-    @Override
     public Iterator<T> iterator() {
         return new LinkedListDequeIterator();
     }
@@ -119,7 +118,6 @@ public class LinkedListDeque<T> implements Deque<T> {
         }
     }
     
-    @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (o.getClass() != this.getClass()) return false;

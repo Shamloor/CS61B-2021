@@ -131,8 +131,9 @@ public class ArrayDeque<T> implements Deque<T> {
     public T get(int index) {
         return items[(index + first + 1) % items.length];
     }
+    /
     
-    @Override
+    
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
@@ -150,7 +151,6 @@ public class ArrayDeque<T> implements Deque<T> {
         }
     }
     
-    @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (o.getClass() != this.getClass()) return false;
