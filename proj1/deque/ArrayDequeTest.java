@@ -99,7 +99,7 @@ public class ArrayDequeTest {
     @Test
     public void equalsTest() {
         Deque<Integer> arrayDeque = new ArrayDeque<>();
-        Deque<Integer> cmpDeque = new ArrayDeque<>();
+        Deque<Integer> cmpDeque = new LinkedListDeque<>();
         arrayDeque.addFirst(17);
         arrayDeque.addFirst(18);
         arrayDeque.addFirst(19);
