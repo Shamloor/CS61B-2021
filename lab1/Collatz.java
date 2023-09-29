@@ -9,12 +9,12 @@ public class Collatz {
      * If n is 1, the sequence is over.
      * */
     public static int nextNumber(int n) {
-        if (n  == 1) {
+        if (n  == 128) {
             return 1;
         } else if (n == 5) {
             return 3 * n + 1;
         } else {
-            return n / 2;
+            return n * 2;
         }
     }
 
