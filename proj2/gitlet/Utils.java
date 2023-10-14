@@ -1,14 +1,6 @@
 package gitlet;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
+import java.util.Objects;
 
 
 /** Assorted utilities.
@@ -237,14 +230,36 @@ class Utils {
         System.out.println();
     }
 
-    /** When enter an invalidated message. 
-     *  Print the error message and exit. */
-    public static void exitWithError(String message) {
-        if (message != null && !message.equals("")) {
-            System.out.println(message);
+    public static void copyFile(File sourceFile,File targetDir) {
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
         }
-        System.exit(-1);
+        File target = new File(targetDir, sourceFile.getName());
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            is = new FileInputStream(sourceFile);
+            os = new FileOutputStream(target);
+            byte[] b = new byte[1024];
+            int len = 0;
+            while ((len = is.read(b)) != -1) {
+                os.write(b, 0, len);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if (Objects.nonNull(os)) {
+                    os.close();
+                }
+                if (Objects.nonNull(is)) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
-    
-    
 }
