@@ -15,6 +15,7 @@ import static gitlet.Utils.*;
  *
  *  @author TODO
  */
+@SuppressWarnings("unchecked")
 public class Commit implements Serializable {
 
     /** The message of this Commit. */
@@ -34,7 +35,7 @@ public class Commit implements Serializable {
             this.timestamp = new Date().toString();
             this.fileToBlob = getModifiedMap();
         }
-        this.commitID = Utils.sha1(this);
+        this.commitID = Utils.sha1(this.toString());
         
 
         System.out.println(message);
@@ -63,8 +64,8 @@ public class Commit implements Serializable {
     }
 
     private Map getParentMap() {
-        File parent = join(Repository.OBJECTS, this.parent);
-        Map parentMap = readObject(parent, Commit.class).fileToBlob;
+        File parent = join(Repository.COMMIT, this.parent);
+        Map<String, String> parentMap = readObject(parent, Commit.class).fileToBlob;
         return parentMap;
     }
     

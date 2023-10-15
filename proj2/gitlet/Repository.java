@@ -22,23 +22,26 @@ public class Repository implements Serializable {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     /** HEAD pointer. */
     public static final File HEAD = join(GITLET_DIR, "HEAD");
-    /** Object folder for commits and blobs. */
-    public static final File OBJECTS = join(GITLET_DIR, "objects");
-    /** Add area in staging area. */
-    public static final File ADDAREA = join(GITLET_DIR, "staging", "AddArea");
-    /** Remove area in staging area. */
-    public static final File REMOVEAREA = join(GITLET_DIR, "staging", "RemoveArea");
     /** Tracked files. */
     public static final File TRACKED = join(GITLET_DIR, "tracked_files");
+    /** Object folder for commits and blobs. */
+    public static final File OBJECTS = join(GITLET_DIR, "objects");
+    /** Containing commit object file. */
     public static final File COMMIT = join(OBJECTS, "commits");
-
+    /** Contains add area and remove area. */
+    public static final File AREA = join(GITLET_DIR, "area");
+    /** Add area in staging area. */
+    public static final File ADDAREA = join(AREA, "AddArea");
+    /** Remove area in staging area. */
+    public static final File REMOVEAREA = join(AREA, "RemoveArea");
+    
     /** Creates a new Gitlet version-control system in the current directory. This system
      *  will automatically start with one commit: a commit that contains no files and has
      *  the commit message initial commit (just like that, with no punctuation). It will
      *  have a single branch: master, which initially points to this initial commit, and master
      *  will be the current branch. The timestamp for this initial commit will be 00:00:00
      *  UTC, Thursday, 1 January 1970 in whatever format you choose for dates (this is called
-     *  “The (Unix) Epoch”, represented internally by the time 0.) Since the initial commit in
+     *  represented internally by the time 0.) Since the initial commit in
      *  all repositories created by Gitlet will have exactly the same content, it follows that
      *  all repositories will automatically share this commit (they will all have the same UID)
      *  and all commits in all repositories will trace back to it.*/
@@ -48,21 +51,31 @@ public class Repository implements Serializable {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
             return;
         }
-        // Create a filefolder .gitlet
+        
+        // Create folders.
+        // Cannot directly create a file in multiple folders, you can just create them step by step. 
         GITLET_DIR.mkdir();
+        OBJECTS.mkdir();
+        COMMIT.mkdir();
+        AREA.mkdir();
+        ADDAREA.mkdir();
+        REMOVEAREA.mkdir();
         
         // Initial commit, and persistence.
         Commit initial = new Commit("initial commit", null);
         String sha1Code = initial.getCommitID();
         File commitFile = join(COMMIT, sha1Code);
-        writeContents(commitFile, initial);
+        writeObject(commitFile, initial);
         
         // Create a branch named master and write into a file.
         File branch = join(GITLET_DIR, "master");
-        Utils.writeContents(branch, initial.getCommitID());
+        writeContents(branch, initial.getCommitID());
         
-        //and write into HEAD pointer.
-        Utils.writeContents(HEAD, initial.getCommitID());
+        // Write into HEAD pointer.
+        writeContents(HEAD, initial.getCommitID());
+        
+        // Create an empty file.
+        writeContents(TRACKED, "");
     }
     
     /** Adds a copy of the file as it currently exists to the staging area (see the description
@@ -76,28 +89,32 @@ public class Repository implements Serializable {
      *  command.*/
     
     public static void add(String filename) {
+        // Initialization.
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+        
         // Current work directory.
         File fileInWorkdir = join(CWD, filename);
         if (!fileInWorkdir.exists()) {
             System.out.println("File does not exist.");
             return;
         }
-        String sha1ofFile = Utils.sha1(fileInWorkdir);
+        
+        String sha1ofFile = sha1(fileInWorkdir.toString());
+        
         // File folder will store all blobs of one file.
         File fileFolderInBlobs = join(OBJECTS, filename);
         File fileInBlobs = join(fileFolderInBlobs, sha1ofFile);
-        Blobs blobs = new Blobs();
-        StagingArea stagingArea = new StagingArea();
-        // TrackedFiles trackedFiles = new TrackedFiles();
         
+        StagingArea stagingArea = new StagingArea();
         if (!fileFolderInBlobs.exists() || !fileInBlobs.exists()) {
             // If the blob of the file does not exist, add to staging area. 
             stagingArea.addToAddArea(fileInWorkdir);
-            // trackedFiles.addToTrackedFiles(fileInWorkdir.getName());
-            
         } else {
-            // Remove from add area if it exists???
-            stagingArea.removeFromAddArea(fileInWorkdir);
+            // Remove from add area if it exists.
+            stagingArea.removeFromAddArea(filename);
         }
     }
     
@@ -133,7 +150,7 @@ public class Repository implements Serializable {
 
      After the commit command, the new commit is added as a new node in the commit tree.
 
-     The commit just made becomes the “current commit”, and the head pointer now points to it.
+     The commit just made becomes the current, and the head pointer now points to it.
      The previous head commit is this commit’s parent commit.
 
      Each commit should contain the date and time it was made.
@@ -147,6 +164,12 @@ public class Repository implements Serializable {
      of its files, parent reference, log message, and commit time.*/
     
     public static void commit(String commitMessage) {
+        // Initialization.
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+        
         // Need a non-blank message.
         if (commitMessage == null) {
             System.out.println("Please enter a commit message.");
@@ -154,38 +177,39 @@ public class Repository implements Serializable {
         }
         
         // Whether the folder in add area is empty.
-        File folder = new File(StagingArea.addArea.toString());
-        File[] files = folder.listFiles();
+        File[] files = ADDAREA.listFiles();
         if (files.length == 0) {
             System.out.println("No changes added to the commit.");
             return;
         }
         
-        // Create blobs directory if it's not exist.
-        Blobs blobs = new Blobs();
-        
-        // Create Commit object to store information, change the contents of HEAD file.
-        String headInfo = Utils.readContentsAsString(HEAD);
+        // Create Commit object to store information, 
+        String headInfo = readContentsAsString(HEAD);
         Commit commit = new Commit(commitMessage, headInfo);
-        Utils.writeContents(HEAD, commit.getCommitID());
         
-        // Add each file in add area to blobs in the form of sha1 code.
-        // Create a map object in commit.
-        // Remove the files in AddArea when they are committed.
         for (File file : files) {
-            String blob = blobs.createEachBlob(file);
+            // Create blob of file.
+            String blob = Blobs.createEachBlob(file);
+            // Add map.
             commit.addMapKey(file.getName(), blob);
+            // Persistence in tracked file.
+            String contents = readContentsAsString(TRACKED);
+            String newContents = contents + file.getName() + '\n';
+            writeContents(TRACKED, newContents);
+            // Delete file in add area.
             file.delete();
         }
         
         // Add tracked file blob.
-        String trackedBlob = blobs.createEachBlob(TRACKED);
+        String trackedBlob = Blobs.createEachBlob(TRACKED);
         commit.addMapKey(TRACKED.getName(), trackedBlob);
-        
         
         // Persistence of Commit object.
         File commitFile = join(COMMIT, commit.getCommitID());
         writeObject(commitFile, commit);
+
+        // Change the contents of HEAD file.
+        writeContents(HEAD, commit.getCommitID());
     }
     
     /** Unstage the file if it is currently staged for addition. If the file is tracked

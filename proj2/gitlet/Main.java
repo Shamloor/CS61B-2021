@@ -1,5 +1,7 @@
 package gitlet;
 
+
+
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author TODO
  */
@@ -13,7 +15,7 @@ public class Main {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
         }
-        
+        /*
         String firstArg = args[0];
         
         if (firstArg.equals("init")) {
@@ -37,6 +39,10 @@ public class Main {
         if (firstArg.equals("find")) {
             Repository.find(args[1]);
         }
-        
+        */
+
+        Repository.init();
+        Repository.add("testFile");
+        Repository.commit("first commit.");
     }
 }
