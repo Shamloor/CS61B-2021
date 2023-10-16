@@ -15,34 +15,45 @@ public class Main {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
         }
-        /*
-        String firstArg = args[0];
         
-        if (firstArg.equals("init")) {
-            Repository.init();
-        }
-        if (firstArg.equals("add")) {
-            Repository.add(args[1]);
-        }
-        if (firstArg.equals("commit")) {
-            Repository.commit(args[1]);
-        }
-        if (firstArg.equals("rm")) {
-            Repository.rm(args[1]);
-        }
-        if (firstArg.equals("log")) {
-            Repository.log();
-        }
-        if (firstArg.equals("global-log")) {
-            Repository.global_log();
-        }
-        if (firstArg.equals("find")) {
-            Repository.find(args[1]);
-        }
-        */
+//        if (args[0].equals("init")) {
+//            Repository.init();
+//        }
+//        if (args[0].equals("add")) {
+//            Repository.add(args[1]);
+//        }
+//        if (args[0].equals("commit")) {
+//            Repository.commit(args[1]);
+//        }
+//        if (args[0].equals("rm")) {
+//            Repository.rm(args[1]);
+//        }
+//        if (args[0].equals("log")) {
+//            Repository.log();
+//        }
+//        if (args[0].equals("global-log")) {
+//            Repository.global_log();
+//        }
+//        if (args[0].equals("find")) {
+//            
+//        }
+//        if (args[0].equals("checkout")) {
+//            if (args[1].equals("--")) {
+//                
+//            } else if (args[2].equals("--")) {
+//                
+//            } else {
+//                
+//            }  
+//        }
 
-        Repository.init();
-        Repository.add("testFile");
-        Repository.commit("first commit.");
+//        Repository.init();
+//        Repository.add("testFile");
+//        Repository.commit("first commit.");
+//        Repository.rm("testFile");
+//        Repository.commit("second commit");
+        Repository.log();
+//        Repository.global_log();
+        //Repository.checkout("testFile");
     }
 }

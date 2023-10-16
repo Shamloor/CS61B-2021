@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 
 import static gitlet.Utils.join;
+import static gitlet.Utils.readContentsAsString;
 
 public class Blobs {
     
@@ -20,7 +21,7 @@ public class Blobs {
             folder.mkdir();
         }
         
-        String sha1ofFile = Utils.sha1(file.toString());
+        String sha1ofFile = Utils.sha1(file.getName(), readContentsAsString(file));
         File sha1File = join(folder, sha1ofFile);
         
         // Write contents.

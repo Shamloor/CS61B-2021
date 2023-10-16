@@ -27,53 +27,36 @@ public class Commit implements Serializable {
     private String mergedID;
     
     public Commit(String message, String parent) {
-        this.message = message;
+        changeMessage(message);
         this.parent = parent;
         if (this.parent == null) {
             this.timestamp = new Date(0).toString();
         } else {
             this.timestamp = new Date().toString();
-            this.fileToBlob = getModifiedMap();
         }
-        this.commitID = Utils.sha1(this.toString());
-        
-
-        System.out.println(message);
     }
     
     public void addMapKey(String filename, String blob) {
         fileToBlob.put(filename, blob);
     }
     
+    public void removeMapKey(String filename) {
+        fileToBlob.remove(filename);
+    }
+    
     public String getCommitID() {
+        commitID = sha1(this.toString());
         return commitID;
     }
     
-    
-    private Map getModifiedMap() {
-        Map map = getParentMap();
-        // If folder exists, meaning some filename need to be deleted.
-        File fileFolderForDelete = join(Repository.REMOVEAREA, parent);
-        if (fileFolderForDelete.exists()) {
-            File[] fileForDelete = fileFolderForDelete.listFiles();
-            for (File file : fileForDelete) {
-                map.remove(file.getName());
-            }
-        }
-        return map;
-    }
-
-    private Map getParentMap() {
-        File parent = join(Repository.COMMIT, this.parent);
-        Map<String, String> parentMap = readObject(parent, Commit.class).fileToBlob;
-        return parentMap;
-    }
-    
-    public boolean doesFileExists(String filename) {
+    public boolean hasFile(String filename) {
         return fileToBlob.containsKey(filename);
     }
     
     public String getBlobOfFile(String filename) {
+        if (!fileToBlob.containsKey(filename)) {
+            return null;
+        }
         return fileToBlob.get(filename);
     }
     
@@ -94,7 +77,19 @@ public class Commit implements Serializable {
         return parent;
     }
 
-    public String getMessage() {
-        return message;
+    public void copyFileToCWD(String filename) {
+        String blob = fileToBlob.get(filename);
+        File fileBlob = join(Repository.OBJECTS, filename, blob);
+        File fileInCWD = join(Repository.CWD, filename);
+        writeContents(fileInCWD, readContentsAsString(fileBlob));
+    }
+    
+    public void changeMessage(String message) {
+        this.message = message;
+        System.out.println(message);
+    }
+
+    public String getParent() {
+        return parent;
     }
 }
