@@ -1,95 +1,135 @@
 package gitlet;
 
-// TODO: any imports you need here
-
 import java.io.File;
 import java.io.Serializable;
-import java.util.Date; // TODO: You'll likely use this in this class
-import java.util.HashMap;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
  *
- *  @author TODO
+ *  @author Willson Yu
  */
-@SuppressWarnings("unchecked")
 public class Commit implements Serializable {
-
-    /** The message of this Commit. */
     private String message;
-    private String timestamp;
     private String parent;
+    private Map<String, String> fileSnapshot = new HashMap<>();
     private String commitID;
-    private Map<String, String> fileToBlob = new HashMap<>();
+    private String date;
+    private int add;
+    private int delete;
+    private int modify;
+    
     private String mergedID;
+    private boolean isSplit = false;
+
+    private SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH" +
+            ":mm:ss yyyy Z", Locale.ENGLISH);
     
     public Commit(String message, String parent) {
-        changeMessage(message);
+        this.message = message;
         this.parent = parent;
         if (this.parent == null) {
-            this.timestamp = new Date(0).toString();
+            date = d.format(new Date(0));
         } else {
-            this.timestamp = new Date().toString();
+            date = d.format(new Date());
+        }
+        commitID = sha1(this.toString());
+    }
+
+    public String getCommitID() {
+        return commitID;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void inheritParentMap() {
+        if (parent == null) {
+            return;
+        }
+        File parentCommitFile = join(Repository.COMMITS, parent);
+        fileSnapshot = readObject(parentCommitFile, Commit.class).fileSnapshot;
+    }
+    
+    public void addOrModifyMapKV(String filename, String snapshot) {
+        if (!fileSnapshot.containsKey(filename)){
+            fileSnapshot.put(filename, snapshot);
+            add ++;
+        } else {
+            fileSnapshot.replace(filename, snapshot);
+            modify ++;
         }
     }
     
-    public void addMapKey(String filename, String blob) {
-        fileToBlob.put(filename, blob);
+    public void removeMapKV(String filename) {
+        fileSnapshot.remove(filename);
+        delete ++;
     }
     
-    public void removeMapKey(String filename) {
-        fileToBlob.remove(filename);
-    }
-    
-    public String getCommitID() {
-        commitID = sha1(this.toString());
-        return commitID;
+    public boolean hasFileComparedToCWD(String filename) {
+        File fileInCWD = join(Repository.CWD, filename);
+        String sha1OfCWD = getSha1OfFile(fileInCWD);
+        if (fileSnapshot.containsKey(filename)) {
+            String sha1OfCommit = fileSnapshot.get(filename);
+            return sha1OfCommit.equals(sha1OfCWD);
+        } else {
+            return false;
+        }
     }
     
     public boolean hasFile(String filename) {
-        return fileToBlob.containsKey(filename);
+        return fileSnapshot.containsKey(filename);
     }
     
-    public String getBlobOfFile(String filename) {
-        if (!fileToBlob.containsKey(filename)) {
-            return null;
-        }
-        return fileToBlob.get(filename);
+    public String getFileSnapshotValue(String filename) {
+        return fileSnapshot.get(filename);
     }
     
     public void printLog() {
         System.out.println("===");
-        System.out.println("commit " + this.commitID);
-        if (this.mergedID != null) {
-            String firstCommit = this.parent.substring(0, 7);
-            String secondCommit = this.mergedID.substring(0, 7);
-            System.out.println("Merge: " + firstCommit + " " + secondCommit);
+        System.out.println("commit " + commitID);
+        if (mergedID != null) {
+            System.out.println("Merge: " + parent.substring(0, 7)
+                    + " " + mergedID.substring(0, 7));
         }
-        System.out.println("Date: " + this.timestamp);
-        System.out.println(this.message);
+        
+        System.out.println("Date: " + date);
+        System.out.println(message);
         System.out.println();
     }
     
-    public String getParentCommitID() {
-        return parent;
-    }
-
-    public void copyFileToCWD(String filename) {
-        String blob = fileToBlob.get(filename);
-        File fileBlob = join(Repository.OBJECTS, filename, blob);
-        File fileInCWD = join(Repository.CWD, filename);
-        writeContents(fileInCWD, readContentsAsString(fileBlob));
+    
+    
+    public Map<String, String> getFileSnapshot() {
+        return fileSnapshot;
     }
     
-    public void changeMessage(String message) {
-        this.message = message;
-        System.out.println(message);
+    public void copySnapshotToCWD(String filename) {
+        File targetFile = join(Repository.CWD, filename);
+        String snapshot = fileSnapshot.get(filename);
+        File sourceFile = join(Repository.OBJECTS, filename, snapshot);
+        writeContents(targetFile, readContents(sourceFile));
     }
-
+    
+    public void copyAllSnapshotsInCommitToCWD() {
+        for (String filename : fileSnapshot.keySet()) {
+            copySnapshotToCWD(filename);
+        }
+    }
+    
     public String getParent() {
         return parent;
     }
+
+    public void setSplitToTrue() {
+        isSplit = true;
+    }
+    
+    public boolean getIsSplit() {
+        return isSplit;
+    }
+    
 }

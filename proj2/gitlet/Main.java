@@ -1,7 +1,5 @@
 package gitlet;
 
-
-
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author TODO
  */
@@ -9,51 +7,66 @@ public class Main {
 
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
-     *  java gitlet.Main add hello.txt
      */
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.out.println("Please enter a command.");
+            System.out.println();
         }
         
-//        if (args[0].equals("init")) {
-//            Repository.init();
-//        }
-//        if (args[0].equals("add")) {
-//            Repository.add(args[1]);
-//        }
-//        if (args[0].equals("commit")) {
-//            Repository.commit(args[1]);
-//        }
-//        if (args[0].equals("rm")) {
-//            Repository.rm(args[1]);
-//        }
-//        if (args[0].equals("log")) {
-//            Repository.log();
-//        }
-//        if (args[0].equals("global-log")) {
-//            Repository.global_log();
-//        }
-//        if (args[0].equals("find")) {
-//            
-//        }
-//        if (args[0].equals("checkout")) {
-//            if (args[1].equals("--")) {
-//                
-//            } else if (args[2].equals("--")) {
-//                
-//            } else {
-//                
-//            }  
-//        }
-
-//        Repository.init();
-//        Repository.add("testFile");
-//        Repository.commit("first commit.");
-//        Repository.rm("testFile");
-//        Repository.commit("second commit");
-        Repository.log();
-//        Repository.global_log();
-        //Repository.checkout("testFile");
+        switch(args[0]) {
+            case "init":
+                Repository.init();
+                break;
+            case "add":
+                Repository.add(args[1]);
+                break;
+            case "commit":
+                if (args.length == 1) {
+                    System.out.println("Please enter a commit message.");
+                    return;
+                }
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                Repository.rm(args[1]);
+                break;
+            case "log":
+                Repository.log();
+                break;
+            case "global-log":
+                Repository.globalLog();
+                break;
+            case "find":
+                Repository.find(args[1]);
+                break;
+            case "status":
+                Repository.status();
+                break;
+            case "checkout":
+                if (args.length == 3) {
+                    Repository.checkout1(args[2]);
+                } else if (args.length == 4) {
+                    Repository.checkout2(args[1], args[3]);
+                } else if (args.length == 2) {
+                    Repository.checkout3(args[1]);
+                }
+                break;
+            case "branch":
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                Repository.rmBranch(args[1]);
+                break;
+            case "reset":
+                Repository.reset(args[1]);
+                break;
+            case "merge":
+                Repository.merge(args[1]);
+                break;
+            default:
+                System.out.println();
+                break;
+        }
+        
     }
 }

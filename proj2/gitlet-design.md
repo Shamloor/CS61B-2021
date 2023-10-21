@@ -1,56 +1,67 @@
 # Gitlet Design Document
 
-**Name**: Willson Yu
-
 ## Classes and Data Structures
-
-### Repository
-
-#### Instance Variables
-
-* CWD - current working directory.
-* GITLET_DIR - .gitlet directory containing all hidden data.
-* HEAD - head pointer.
-* OBJECTS - object folder containing blobs and commits.
-* ADDAREA - Add area in staging area.
-* REMOVEAREA - Remove area in staging area.
-
-### TrackedFiles
-
-#### Instance Variables
-
-* TrackedFiles - Set for names of tracked files.
-
-
-### StagingArea
-
-#### Instance Variables
-
-* BeRemoved - whether a file can be removed.
-
 
 ### Commit
 
 #### Instance Variables
 
-* Message - contains the message of a commit.
-* Timestamp - time when a commit was created. Assigned by the constructor.
-* Parent - the parent file name of a commit object.
-* CommitID - Uses SHA1 function to create unique ID.
-* FileToBlob - Store the file version, and points to files in blobs.
++ String message
++ String parent
++ Map fileSnapshot
++ String commitID
++ String date
++ Logs
+  + int add
+  + int delete
+  + int modify
+
+
+
+### Repository
 
 #### Functions
-* 
 
-### Blobs
++ Commit createNewCommit(String message) -> getCommitID()&Commit.inheritParentMap()
 
-#### Instance Variables
++ void createSnapshotOfFile(Commit commit) -> Commit.addOrModifyMapKV()
++ Commit getCurrentCommit() -> getCommitID()
++ Commit getSpecifiedCommit(String id)
++ String getCommitID(File file)
++ void changeHead(Commit commit)
++ void commitPersistence(Commit commit)
++ hasFileInCommit(Commit commit, String filename) -> Commit.hasFile()
++ hasSameSnapshot(Commit commit, String filename) -> Commit.getFileSnapshot()
++ List\<Commit\> getCommits()
++ String getCurrentBranch()
++ void printBranches() -> getCurrentBranch()
++ void printFiles(File folder)
++ void printComparedFilesInAddandCWD()
++ void printComparedFilesInCommitAndCWD() -> getCurrentCommit() & Commit.getFileSnapshot() & isStaged() & printComparedFilesInAddandCWD()
++ void printUntrackedFiles() -> isStaged() & isCommitted()
++ boolean isUntrackedFileExist() -> isStaged() & isCommitted()
++ isStaged(File area, String filename)
++ isCommitted(String filename) -> getCurrentCommit() & Commit.hasFileComparedToCWD(filename)
++ delelteRedundantFiles(String commitID) -> getSpecifiedCommit() & Commit.getFileSnapshot()
++ 
 
-* FolderName - every folder stores blobs of one file.
-* BlobID - the filename of one blob which was made by SHA1 function.
-* ModifyInfo - information about modification.
+
+
 
 ## Algorithms
 
 ## Persistence
+
+```c
+     *  .gitlet
+     *  |---objects
+     *  |    |---commits
+     *  |    |---(hash of filename)
+     *  |        |---snapshot of files
+     *  |---area
+     *  |   |---add
+     *  |   |---remove
+     *  |---branches
+     *  |---HEAD
+```
 
