@@ -324,8 +324,10 @@ public class Repository {
         
         // Otherwise, continue with the steps below.
         
-        
-        
+    }
+    
+    public static void testC() {
+        System.out.println(getCurrentCommit().getParent());
     }
     
     private static void initailizeFolders() {

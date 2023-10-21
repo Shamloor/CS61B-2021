@@ -15,12 +15,12 @@ PYTHON = python
 
 RMAKE = "$(MAKE)"
 
-TESTER = CLASSPATH="$$(pwd)/..:$(CLASSPATH):;$$(pwd)/..;$(CLASSPATH)" $(PYTHON) tester.py
-# TESTER = $(PYTHON) tester.py
+# TESTER = CLASSPATH="$$(pwd)/..:$(CLASSPATH):;$$(pwd)/..;$(CLASSPATH)" $(PYTHON) tester.py
+TESTER = $(PYTHON) tester.py
 
 TESTER_FLAGS = 
 
-TESTS = samples/*.in student_tests/*.in *.in
+TESTS = samples/*.in student_tests/*.in
 
 .PHONY: default check clean std
 
@@ -30,6 +30,7 @@ default:
 	$(RMAKE) PYTHON=$(PYTHON) check
 
 check:
+	@CLASSPATH=..:$(CLASSPATH) java -ea capers.Main >/dev/null 2>&1 || true
 	@echo "Testing application gitlet.Main..."
 	$(TESTER) $(TESTER_FLAGS) $(TESTS)
 

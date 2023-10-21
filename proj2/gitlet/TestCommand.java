@@ -16,7 +16,7 @@ public class TestCommand {
     
     @Test
     public void testCommit() {
-        Repository.commit("second commit");
+        Repository.commit("third commit");
     }
     @Test
     public void testLog() {
@@ -36,5 +36,10 @@ public class TestCommand {
     @Test
     public void testCheckout2() {
         Repository.checkout2("104", "test");
+    }
+    
+    @Test
+    public void testTestC() {
+        Repository.testC();
     }
 }
