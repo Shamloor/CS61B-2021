@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 public class BSTMap<K extends Comparable<K>, V>
         implements Map61B<K, V>{
-    Node root;
+    private Node root;
     
     private class Node {
         K k;
@@ -106,16 +106,6 @@ public class BSTMap<K extends Comparable<K>, V>
     @Override
     public Iterator<K> iterator() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void forEach(Consumer<? super K> action) {
-        Map61B.super.forEach(action);
-    }
-
-    @Override
-    public Spliterator<K> spliterator() {
-        return Map61B.super.spliterator();
     }
     
     public void printInOrder() {
