@@ -35,7 +35,7 @@ public class Commit implements Serializable {
         } else {
             date = d.format(new Date());
         }
-        commitID = sha1(this.toString());
+        commitID = sha1(this.message, this.date);
     }
 
     public String getCommitID() {
