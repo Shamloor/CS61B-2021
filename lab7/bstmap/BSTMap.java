@@ -5,20 +5,20 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-public class BSTMap<Key extends Comparable<Key>, Value>
-        implements Map61B<Key, Value>{
+public class BSTMap<K extends Comparable<K>, V>
+        implements Map61B<K, V>{
     Node root;
     
     private class Node {
-        Key key;
-        Value value;
+        K k;
+        V v;
         Node left;
         Node right;
         int size;
         
-        public Node(Key key, Value value, int size) {
-            this.key = key;
-            this.value = value;
+        public Node(K k, V v, int size) {
+            this.k = k;
+            this.v = v;
             this.size = size;
         }
     }
@@ -30,26 +30,26 @@ public class BSTMap<Key extends Comparable<Key>, Value>
     }
 
     @Override
-    public boolean containsKey(Key key) {
-        return get(key) != null;
+    public boolean containsKey(K k) {
+        return get(k) != null;
     }
 
     @Override
-    public Value get(Key key) {
-        return get(root, key);
+    public V get(K k) {
+        return get(root, k);
     }
     
-    private Value get(Node x, Key key) {
+    private V get(Node x, K k) {
         if (x == null) {
             return null;
         }
-        int cmp = x.key.compareTo(key);
+        int cmp = x.k.compareTo(k);
         if (cmp < 0) {
-            return get(x.right, key);
+            return get(x.right, k);
         } else if (cmp > 0) {
-            return get(x.left, key);
+            return get(x.left, k);
         } else {
-            return x.value;
+            return x.v;
         }
     }
 
@@ -64,57 +64,57 @@ public class BSTMap<Key extends Comparable<Key>, Value>
     }
 
     @Override
-    public void put(Key key, Value value) {
+    public void put(K k, V v) {
         
-        root = put(root, key, value);
+        root = put(root, k, v);
     }
     
-    private Node put(Node x, Key key, Value value) {
-        if (value == null) {
-            value = (Value) "null";
+    private Node put(Node x, K k, V v) {
+        if (v == null) {
+            v = (V) "null";
         }
         if (x == null) {
-            return new Node(key, value, 1);
+            return new Node(k, v, 1);
         }
-        int cmp = x.key.compareTo(key);
+        int cmp = x.k.compareTo(k);
         if (cmp > 0) {
-            x.left = put(x.left, key, value);
+            x.left = put(x.left, k, v);
         } else if (cmp < 0) {
-            x.right = put(x.right, key, value);
+            x.right = put(x.right, k, v);
         } else {
-            x.value = value;
+            x.v = v;
         }
         x.size = 1 + size(x.left) + size(x.right);
         return x;
     }
 
     @Override
-    public Set<Key> keySet() {
+    public Set<K> keySet() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Value remove(Key key) {
+    public V remove(K k) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Value remove(Key key, Value value) {
+    public V remove(K k, V v) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Iterator<Key> iterator() {
+    public Iterator<K> iterator() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void forEach(Consumer<? super Key> action) {
+    public void forEach(Consumer<? super K> action) {
         Map61B.super.forEach(action);
     }
 
     @Override
-    public Spliterator<Key> spliterator() {
+    public Spliterator<K> spliterator() {
         return Map61B.super.spliterator();
     }
     
@@ -126,7 +126,7 @@ public class BSTMap<Key extends Comparable<Key>, Value>
         if (x.left != null) {
             printInOrder(x.left);
         } 
-        System.out.println(x.key + " " + x.value);
+        System.out.println(x.k + " " + x.v);
         if (x.right != null) {
             printInOrder(x.right);
         }
