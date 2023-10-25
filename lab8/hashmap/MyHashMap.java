@@ -1,6 +1,6 @@
 package hashmap;
 
-import java.util.Collection;
+import java.util.*;
 
 /**
  *  A hash table-backed Map implementation. Provides amortized constant time
@@ -26,66 +26,159 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     }
 
     /* Instance Variables */
+    private int initialSize;
+    private double loadFactor;
     private Collection<Node>[] buckets;
-    // You should probably define some more!
+    private int numOfBuckets;
+    private Set<K> keySet = new HashSet<>();
+    private Set<Node> nodeSet = new HashSet<>();
+    
 
     /** Constructors */
-    public MyHashMap() { }
+    public MyHashMap() {
+        this.initialSize = 16;
+        this.loadFactor = 0.75;
+        this.buckets = createTable(this.initialSize);
+    }
 
-    public MyHashMap(int initialSize) { }
+    public MyHashMap(int initialSize) {
+        this.initialSize = initialSize;
+        buckets = createTable(this.initialSize);
+    }
+    
+    public MyHashMap(int initialSize, double maxLoad) {
+        this.initialSize = initialSize;
+        this.buckets = createTable(initialSize);
+        this.loadFactor = maxLoad;
+    }
+    
+    
+    
+    
+    @Override
+    public void clear() {
+        this.buckets = createTable(initialSize);
+        this.numOfBuckets = 0;
+        this.keySet = createKeySet();
+        this.nodeSet = createNodeSet();
+    }
 
-    /**
-     * MyHashMap constructor that creates a backing array of initialSize.
-     * The load factor (# items / # buckets) should always be <= loadFactor
-     *
-     * @param initialSize initial size of backing array
-     * @param maxLoad maximum load factor
-     */
-    public MyHashMap(int initialSize, double maxLoad) { }
+    @Override
+    public boolean containsKey(K key) {
+        return get(key) != null;
+    }
 
-    /**
-     * Returns a new node to be placed in a hash table bucket
-     */
+    @Override
+    public V get(K key) {
+        Collection<Node> collection = this.buckets[getHashCode(key)];
+        if (collection == null) {
+            return null;
+        }
+        Iterator<Node> it = collection.iterator();
+        while (it.hasNext()) {
+            Node node = it.next();
+            if (node.key.equals(key)) {
+                return node.value;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public int size() {
+        return this.keySet.size();
+    }
+
+    @Override
+    public void put(K key, V value) {
+        if (overSize()) {
+            resize();
+        }
+        
+        int hashCode = getHashCode(key);
+        if (this.buckets[hashCode] == null) {
+            this.buckets[hashCode] = new LinkedList();
+            numOfBuckets += 1;
+        }
+        Node newNode = createNode(key, value);
+        if (containsKey(key)) {
+            this.buckets[hashCode].remove(getSpecifiedNode(key));
+            this.nodeSet.remove(getSpecifiedNode(key));
+        }
+        this.buckets[hashCode].add(newNode);
+        this.nodeSet.add(newNode);
+        this.keySet.add(newNode.key);
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return this.keySet;
+    }
+
+    @Override
+    public Iterator<K> iterator() {
+        return keySet.iterator();
+    }
+
+    @Override
+    public V remove(K key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V remove(K key, V value) {
+        throw new UnsupportedOperationException();
+    }
+
+    private int getHashCode(K key) {
+        return Math.floorMod(key.hashCode(), initialSize);
+    }
+
+    private Node getSpecifiedNode(K key) {
+        Iterator<Node> iter = nodeSet.iterator();
+        while (iter.hasNext()) {
+            Node node = iter.next();
+            if (node.key.equals(key)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     private Node createNode(K key, V value) {
-        return null;
+        return new Node(key, value);
     }
 
-    /**
-     * Returns a data structure to be a hash table bucket
-     *
-     * The only requirements of a hash table bucket are that we can:
-     *  1. Insert items (`add` method)
-     *  2. Remove items (`remove` method)
-     *  3. Iterate through items (`iterator` method)
-     *
-     * Each of these methods is supported by java.util.Collection,
-     * Most data structures in Java inherit from Collection, so we
-     * can use almost any data structure as our buckets.
-     *
-     * Override this method to use different data structures as
-     * the underlying bucket type
-     *
-     * BE SURE TO CALL THIS FACTORY METHOD INSTEAD OF CREATING YOUR
-     * OWN BUCKET DATA STRUCTURES WITH THE NEW OPERATOR!
-     */
     protected Collection<Node> createBucket() {
-        return null;
+        return new LinkedList<>();
     }
 
-    /**
-     * Returns a table to back our hash table. As per the comment
-     * above, this table can be an array of Collection objects
-     *
-     * BE SURE TO CALL THIS FACTORY METHOD WHEN CREATING A TABLE SO
-     * THAT ALL BUCKET TYPES ARE OF JAVA.UTIL.COLLECTION
-     *
-     * @param tableSize the size of the table to create
-     */
     private Collection<Node>[] createTable(int tableSize) {
-        return null;
+        return new LinkedList[tableSize];
     }
 
-    // TODO: Implement the methods of the Map61B Interface below
-    // Your code won't compile until you do so!
+    private Set<K> createKeySet() {
+        return new HashSet<>();
+    }
 
+    private Set<Node> createNodeSet() {
+        return new HashSet<>();
+    }
+    
+    private void resize() {
+        initialSize *= 2;
+        Set<K> tmpKeySet = keySet;
+        Set<Node> tmpNodeSet = nodeSet;
+        clear();
+        Iterator<Node> iter = tmpNodeSet.iterator();;
+        while (iter.hasNext()) {
+            Node node = iter.next();
+            put(node.key, node.value);
+        }
+    }
+    
+    private boolean overSize() {
+        return numOfBuckets != 0 && this.keySet.size()
+                / (double)initialSize >= loadFactor;
+    }
 }
