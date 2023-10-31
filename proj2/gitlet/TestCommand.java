@@ -2,6 +2,9 @@ package gitlet;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TestCommand {
     
     @Test
@@ -41,5 +44,10 @@ public class TestCommand {
     @Test
     public void testTestC() {
         Repository.testC();
+    }
+    
+    @Test
+    public void testSMTING() {
+        
     }
 }

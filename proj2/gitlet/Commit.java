@@ -21,7 +21,7 @@ public class Commit implements Serializable {
     private int delete;
     private int modify;
     
-    private String mergedID;
+    private String anotherParent;
     private boolean isSplit = false;
 
     private SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH" +
@@ -91,9 +91,9 @@ public class Commit implements Serializable {
     public void printLog() {
         System.out.println("===");
         System.out.println("commit " + commitID);
-        if (mergedID != null) {
+        if (anotherParent != null) {
             System.out.println("Merge: " + parent.substring(0, 7)
-                    + " " + mergedID.substring(0, 7));
+                    + " " + anotherParent.substring(0, 7));
         }
         
         System.out.println("Date: " + date);
@@ -131,5 +131,8 @@ public class Commit implements Serializable {
     public boolean getIsSplit() {
         return isSplit;
     }
-    
+
+    public void setAnotherParent(String anotherParent) {
+        this.anotherParent = anotherParent;
+    }
 }

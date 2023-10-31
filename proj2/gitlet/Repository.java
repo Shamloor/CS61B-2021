@@ -1,10 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -249,7 +246,7 @@ public class Repository {
         deleteRedundantFiles(branchCommit);
         
         // Change HEAD file.
-        changeHead(branchCommit);
+        changeHead(branchCommit, branchName);
         
         // Clear staging area.
         clearStagingArea();
@@ -306,26 +303,125 @@ public class Repository {
         deleteRedundantFiles(commit);
         
         // Change head.
+        /** Big problem!!! Not this!!! */
         changeHead(commit);
     }
 
     public static void merge(String givenBranch) {
+        if (isUntrackedFileExist()) {
+            System.out.println("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
+            return;
+        }
+        
+        if (ADD.listFiles() != null || REMOVE.listFiles() != null) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+        
+        if (!join(BRANCHES, givenBranch).exists()) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        
+        if (readContentsAsString(HEAD).substring(41).equals(givenBranch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        
         Commit currentCommit = getCurrentCommit();
         Commit givenCommit = getSpecifiedCommit(getCommitID(join(BRANCHES, givenBranch)));
         
         // If given branch is the ancestor of current branch.
         if (isAncestor(givenCommit, currentCommit)) {
             System.out.println("Given branch is an ancestor of the current branch.");
+            return;
         }
         // If current branch is the ancestor of given branch.
         if (isAncestor(currentCommit, givenCommit)) {
             checkout3(givenBranch);
+            return;
         }
         
         // Otherwise, continue with the steps below.
+        // Get split commit.
+        Commit splitCommit = getSplitCommit(currentCommit, givenCommit);
         
+        Map<String, String> splitMap = splitCommit.getFileSnapshot();
+        Map<String, String> currentMap = currentCommit.getFileSnapshot();
+        Map<String, String> givenMap = givenCommit.getFileSnapshot();
+        
+        Set<String> splitSet = splitMap.keySet();
+        Set<String> currentSet = currentMap.keySet();
+        Set<String> givenSet = givenMap.keySet();
+        
+        boolean hasMergeConflict = false;
+        
+        for (String filename : splitSet) {
+            boolean hasInCurrent = currentSet.contains(filename);
+            boolean hasInGiven = givenSet.contains(filename);
+            
+            if (!hasInCurrent && !hasInGiven) {
+                
+            } else if (hasInCurrent && !hasInGiven) {
+                copyFile(join(CWD, filename), REMOVE);
+                removeFile(CWD, filename);
+            } else if (!hasInCurrent && hasInGiven) {
+                // Nothing happens. 
+            } else {
+                String splitSnap = splitMap.get(filename);
+                String currentSnap = currentMap.get(filename);
+                String givenSnap = givenMap.get(filename);
+                
+                boolean cmpCurrentToSplit = currentSnap.equals(splitSnap);
+                boolean cmpGivenToSplit = givenSnap.equals(splitSnap);
+                boolean cmpCurrentToGiven = currentSnap.equals(givenSnap);
+                
+                if (cmpCurrentToSplit && !cmpGivenToSplit) {
+                    givenCommit.copySnapshotToCWD(filename);
+                    copyFile(join(CWD, filename), ADD);
+                } else if (!cmpCurrentToSplit && cmpGivenToSplit) {
+                    // Stay as they are.
+                } else if (!cmpCurrentToSplit && !cmpGivenToSplit) {
+                    if (!cmpCurrentToGiven) {
+                        mergeConflict(filename, currentSnap, givenSnap);
+                        System.out.println("Encountered a merge conflict.");
+                    }
+                }
+            }
+        }
+        
+        // If splitSet does not contain a file.
+        currentSet.removeAll(splitSet);
+        givenSet.removeAll(splitSet);
+        Set<String> tmpCurrentSet = currentSet;
+        Set<String> tmpGivenSet = givenSet;
+        tmpCurrentSet.removeAll(tmpGivenSet);
+        for (String filename : tmpCurrentSet) {
+            givenCommit.addOrModifyMapKV(filename, 
+                    currentCommit.getFileSnapshotValue(filename));
+        }
+        
+        tmpCurrentSet = currentSet;
+        tmpGivenSet.removeAll(tmpCurrentSet);
+        for (String filename : tmpGivenSet) {
+            givenCommit.copySnapshotToCWD(filename);
+            copyFile(join(CWD, filename), ADD); 
+        }
+
+        commit("Merged " + givenBranch + " into " + getCurrentBranch());
+        
+        if (hasMergeConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+        
+        Commit commit = getCurrentCommit();
+        commit.setAnotherParent(readContentsAsString(join(BRANCHES, givenBranch)));
     }
+
     
+
+
     public static void testC() {
         System.out.println(getCurrentCommit().getParent());
     }
@@ -411,15 +507,32 @@ public class Repository {
     private static String getCurrentBranch() {
         return readContentsAsString(HEAD).substring(41);
     }
+    
 
-    private static String getLatestSplitPoint(Commit commit) {
-        while (commit.getParent() != null) {
-            if (commit.getIsSplit()) {
-                return commit.getCommitID();
+    private static Commit getSplitCommit(Commit currentCommit, Commit givenCommit) {
+        List<String> list1 = new ArrayList<>();
+        List<String> list2 = new ArrayList<>();
+        
+        while (true) {
+            if (currentCommit.getIsSplit()) {
+                list1.add(currentCommit.getCommitID());
             }
-            commit = getSpecifiedCommit(commit.getParent());
+            if (currentCommit.getParent() == null) {
+                break;
+            }
         }
-        return null;
+
+        while (true) {
+            if (givenCommit.getIsSplit()) {
+                list2.add(givenCommit.getCommitID());
+            }
+            if (givenCommit.getParent() == null) {
+                break;
+            }
+        }
+        
+        list1.retainAll(list2);
+        return getSpecifiedCommit(list1.get(0));
     }
     
     private static void changeHead(Commit commit) {
@@ -428,6 +541,11 @@ public class Repository {
         }
         String branch = readContentsAsString(HEAD).substring(40);
         String newContents = commit.getCommitID() + branch;
+        writeContents(HEAD, newContents);
+    }
+
+    private static void changeHead(Commit commit, String branchName) {
+        String newContents = commit.getCommitID() + " " + branchName;
         writeContents(HEAD, newContents);
     }
     
@@ -542,9 +660,6 @@ public class Repository {
         return false;
     }
 
-    private static boolean isSplitPoint(String commitID) {
-        return getSpecifiedCommit(commitID).getIsSplit();
-    }
     
     
     
@@ -572,10 +687,16 @@ public class Repository {
             removeFile.delete();
         }
     }
-    
-    
-    
-    
-    /**Tracked files? */
-    /**Branches? */
+
+    private static void mergeConflict(String filename, String currentSnap, String givenSnap) {
+        File currentFile = join(OBJECTS, filename, currentSnap);
+        File givenFile = join(OBJECTS, filename, givenSnap);
+        byte[] head = "<<<<<<< HEAD\n".getBytes();
+        byte[] split = "=======\n".getBytes();
+        byte[] end = ">>>>>>>".getBytes();
+        
+        File target = join(CWD, filename);
+        writeContents(target, head, readContents(currentFile), split, 
+                readContents(givenFile), end);
+    }
 }
