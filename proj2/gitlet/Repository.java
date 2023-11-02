@@ -697,24 +697,18 @@ public class Repository {
     }
     
     private static void mergeDetail(String givenBranch, Commit currentCommit, Commit givenCommit) {
-        // Otherwise, continue with the steps below.
-        // Get split commit.
         Commit splitCommit = getSplitCommit(currentCommit, givenCommit);
-
         Map<String, String> splitMap = splitCommit.getFileSnapshot();
         Map<String, String> currentMap = currentCommit.getFileSnapshot();
         Map<String, String> givenMap = givenCommit.getFileSnapshot();
-
         Set<String> splitSet = splitMap.keySet();
         Set<String> currentSet = currentMap.keySet();
         Set<String> givenSet = givenMap.keySet();
 
         boolean hasMergeConflict = false;
-
         for (String filename : splitSet) {
             boolean hasInCurrent = currentSet.contains(filename);
             boolean hasInGiven = givenSet.contains(filename);
-
 
             if (!hasInCurrent && !hasInGiven) {
                 continue;
