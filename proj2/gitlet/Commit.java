@@ -80,6 +80,8 @@ public class Commit implements Serializable {
         }
     }
     
+    
+    
     public boolean hasFile(String filename) {
         return fileSnapshot.containsKey(filename);
     }

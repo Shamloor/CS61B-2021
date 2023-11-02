@@ -176,6 +176,7 @@ def doExecute(cmnd, dir, timeout, line_num):
                 full_cmnd = "{} {} {} {}".format(JAVA_COMMAND, JVM_OPTIONS, GITLET_CLASS, cmnd)
                 timeout, skip_first_line = None, True
 
+
         out = doCommand(full_cmnd, timeout, skip_first_line)
         return "OK", out
     except CalledProcessError as excp:
@@ -387,7 +388,7 @@ def doTest(test):
     finally:
         if not keep:
             a=1
-            #cleanTempDir(tmpdir)
+            cleanTempDir(tmpdir)
 
 if __name__ == "__main__":
     show = None
@@ -396,7 +397,7 @@ if __name__ == "__main__":
     verbose = False
     src_dir = 'src'
     output_tolerance = 3
-
+    
     try:
         opts, files = \
             getopt(sys.argv[1:], '',

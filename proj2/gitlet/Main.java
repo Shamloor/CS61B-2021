@@ -8,7 +8,7 @@ public class Main {
      */
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.out.println();
+            System.out.println("Please enter a command.");
         }
         
         switch(args[0]) {
@@ -44,7 +44,12 @@ public class Main {
                 if (args.length == 3) {
                     Repository.checkout1(args[2]);
                 } else if (args.length == 4) {
-                    Repository.checkout2(args[1], args[3]);
+                    if (args[2].equals("--")) {
+                        Repository.checkout2(args[1], args[3]);
+                    }
+                    else {
+                        System.out.println("Incorrect operands.");
+                    }
                 } else if (args.length == 2) {
                     Repository.checkout3(args[1]);
                 }
@@ -62,7 +67,7 @@ public class Main {
                 Repository.merge(args[1]);
                 break;
             default:
-                System.out.println();
+                System.out.println("No command with that name exists.");
                 break;
         }
         

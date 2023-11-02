@@ -68,7 +68,7 @@ public class Repository {
         // do not stage it to add area, and remove the file in add area.
         Commit commit = getCurrentCommit();
         if (commit.hasFileComparedToCWD(filename)) {
-            removeFile(ADD, filename);
+            removeFile(REMOVE, filename);
             
             // Else copy the file to add area whether this file exists in add area.    
         } else {
@@ -108,12 +108,17 @@ public class Repository {
         // If one file is currently in add area, just remove it.
         if (hasFileInFolder(ADD, filename)) {
             removeFile(ADD, filename);
-
+            
             // Else if current commit contains this file and has the same snapshot,
             // stage it for removal and remove the file from working directory.
-        } else if (hasFileInCommit(commit, filename) && hasSameSnapshot(commit, filename)) {
-            copyFile(join(CWD, filename), REMOVE);
-            removeFile(CWD, filename);
+        } else if (hasFileInCommit(commit, filename)) {
+            if (!join(CWD, filename).exists()) {
+                commit.copySnapshotToCWD(filename);
+            }
+            if (hasSameSnapshot(commit, filename)) {
+                copyFile(join(CWD, filename), REMOVE);
+                removeFile(CWD, filename);
+            }
 
             // Else print out error message
         } else {
@@ -165,18 +170,28 @@ public class Repository {
     }
 
     public static void status() {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+        
+        System.out.println("=== Branches ===");
         // Print branches.
         printBranches();
-        
+
+        System.out.println("=== Staged Files ===");
         // Print files in add area.
         printFiles(ADD);
-        
+
+        System.out.println("=== Removed Files ===");
         // Print files in remove area.
         printFiles(REMOVE);
-        
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
         // Print files modified but not be staged for commit.
         printComparedFilesInCommitAndCWD();
-        
+
+        System.out.println("=== Untracked Files ===");
         // Print untracked files.
         printUntrackedFiles();
     }
@@ -225,19 +240,21 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
+
+        // Get of commitID from branch.
+        String branchCommitID = readContentsAsString(join(BRANCHES, branchName));
+
+        // Get specified commit.
+        Commit branchCommit = getSpecifiedCommit(branchCommitID);
         
         // Check the existence of untracked files. 
-        if (isUntrackedFileExist()) {
+        if (isUntrackedFileExistAndWillBeOverwriten(branchCommit)) {
             System.out.println("There is an untracked file in the way; " +
                     "delete it, or add and commit it first.");
             return;
         }
         
-        // Get of commitID from branch.
-        String branchCommitID = readContentsAsString(join(BRANCHES, branchName));
         
-        // Get specified commit.
-        Commit branchCommit = getSpecifiedCommit(branchCommitID);
         
         // Copy all files to CWD.
         branchCommit.copyAllSnapshotsInCommitToCWD();
@@ -257,6 +274,11 @@ public class Repository {
         if (hasFileInFolder(BRANCHES, branchName)) {
             System.out.println("A branch with that name already exists.");
         }
+        
+        // Turn isSplit to True.
+        Commit commit = getCurrentCommit();
+        commit.setSplitToTrue();
+        commitPersistence(commit);
         
         // Create new branch file.
         File file = join(BRANCHES, branchName);
@@ -290,7 +312,7 @@ public class Repository {
         }
         
         // If untracked file exists.
-        if (isUntrackedFileExist()) {
+        if (isUntrackedFileExistAndWillBeOverwriten(commit)) {
             System.out.println("There is an untracked file in the way; " +
                     "delete it, or add and commit it first.");
             return;
@@ -302,9 +324,14 @@ public class Repository {
         // Delete redundant files.
         deleteRedundantFiles(commit);
         
+        // Clear staging area.
+        clearStagingArea();
+        
         // Change head.
-        /** Big problem!!! Not this!!! */
         changeHead(commit);
+        
+        // Change current branch.
+        writeContents(join(BRANCHES, getCurrentBranch()), commit.getCommitID());
     }
 
     public static void merge(String givenBranch) {
@@ -314,7 +341,7 @@ public class Repository {
             return;
         }
         
-        if (ADD.listFiles() != null || REMOVE.listFiles() != null) {
+        if (ADD.listFiles().length != 0 || REMOVE.listFiles().length != 0) {
             System.out.println("You have uncommitted changes.");
             return;
         }
@@ -361,9 +388,11 @@ public class Repository {
             boolean hasInCurrent = currentSet.contains(filename);
             boolean hasInGiven = givenSet.contains(filename);
             
+            
             if (!hasInCurrent && !hasInGiven) {
                 
-            } else if (hasInCurrent && !hasInGiven) {
+            } else if (hasInCurrent && !hasInGiven &&
+                    splitMap.get(filename).equals(currentMap.get(filename))) {
                 copyFile(join(CWD, filename), REMOVE);
                 removeFile(CWD, filename);
             } else if (!hasInCurrent && hasInGiven) {
@@ -373,8 +402,8 @@ public class Repository {
                 String currentSnap = currentMap.get(filename);
                 String givenSnap = givenMap.get(filename);
                 
-                boolean cmpCurrentToSplit = currentSnap.equals(splitSnap);
-                boolean cmpGivenToSplit = givenSnap.equals(splitSnap);
+                boolean cmpCurrentToSplit = splitSnap.equals(currentSnap);
+                boolean cmpGivenToSplit = splitSnap.equals(givenSnap);
                 boolean cmpCurrentToGiven = currentSnap.equals(givenSnap);
                 
                 if (cmpCurrentToSplit && !cmpGivenToSplit) {
@@ -385,7 +414,8 @@ public class Repository {
                 } else if (!cmpCurrentToSplit && !cmpGivenToSplit) {
                     if (!cmpCurrentToGiven) {
                         mergeConflict(filename, currentSnap, givenSnap);
-                        System.out.println("Encountered a merge conflict.");
+                        copyFile(join(CWD, filename), ADD);
+                        hasMergeConflict = true;
                     }
                 }
             }
@@ -394,22 +424,14 @@ public class Repository {
         // If splitSet does not contain a file.
         currentSet.removeAll(splitSet);
         givenSet.removeAll(splitSet);
-        Set<String> tmpCurrentSet = currentSet;
-        Set<String> tmpGivenSet = givenSet;
-        tmpCurrentSet.removeAll(tmpGivenSet);
-        for (String filename : tmpCurrentSet) {
-            givenCommit.addOrModifyMapKV(filename, 
-                    currentCommit.getFileSnapshotValue(filename));
-        }
-        
-        tmpCurrentSet = currentSet;
-        tmpGivenSet.removeAll(tmpCurrentSet);
-        for (String filename : tmpGivenSet) {
+
+        givenSet.removeAll(currentSet);
+        for (String filename : givenSet) {
             givenCommit.copySnapshotToCWD(filename);
             copyFile(join(CWD, filename), ADD); 
         }
 
-        commit("Merged " + givenBranch + " into " + getCurrentBranch());
+        commit("Merged " + givenBranch + " into " + getCurrentBranch() + ".");
         
         if (hasMergeConflict) {
             System.out.println("Encountered a merge conflict.");
@@ -417,6 +439,7 @@ public class Repository {
         
         Commit commit = getCurrentCommit();
         commit.setAnotherParent(readContentsAsString(join(BRANCHES, givenBranch)));
+        commitPersistence(commit);
     }
 
     
@@ -491,8 +514,8 @@ public class Repository {
         if (!file.exists()) {
             return null;
         }
-        // Read from HEAD file as String.
-        return readContentsAsString(HEAD).substring(0, 40);
+        // Read from file as String.
+        return readContentsAsString(file).substring(0, 40);
     }
 
     private static List<Commit> getCommits() {
@@ -520,6 +543,7 @@ public class Repository {
             if (currentCommit.getParent() == null) {
                 break;
             }
+            currentCommit = getSpecifiedCommit(currentCommit.getParent());
         }
 
         while (true) {
@@ -529,11 +553,13 @@ public class Repository {
             if (givenCommit.getParent() == null) {
                 break;
             }
+            givenCommit = getSpecifiedCommit(givenCommit.getParent());
         }
         
         list1.retainAll(list2);
         return getSpecifiedCommit(list1.get(0));
     }
+    
     
     private static void changeHead(Commit commit) {
         if (!HEAD.exists()) {
@@ -560,7 +586,8 @@ public class Repository {
     }
     
     private static boolean hasSameSnapshot(Commit commit, String filename) {
-        return commit.getFileSnapshotValue(filename).equals(join(CWD, filename));
+        return commit.getFileSnapshotValue
+                (filename).equals(getSha1OfFile(join(CWD, filename)));
     }
     
 
@@ -604,38 +631,53 @@ public class Repository {
             File fileInCWD = join(CWD, filename);
             File fileInRemove = join(REMOVE, filename);
             String snapshot = getSha1OfFile(fileInCWD);
-            if (!fileInCWD.exists() && !isStaged(REMOVE, filename)) {
+            if (!fileInCWD.exists() && !isStagedForRemoval(filename)) {
                 System.out.println(filename + " (deleted)");
-            } else if (!fileSnapshot.get(filename).equals(snapshot)) {
+            } else if (fileInCWD.exists() && !fileSnapshot.get(filename).equals(snapshot)) {
                 System.out.println(filename + " (modified)");
             } else {
                 printComparedFilesInAddandCWD();
             }
         }
+        System.out.println();
     }
     
     private static void printUntrackedFiles() {
         List<String> filenames = plainFilenamesIn(CWD);
         for (String filename : filenames) {
-            if (!isStaged(ADD, filename) && !isCommitted(filename)) {
+            if (!isStagedForAddition(filename) && 
+                    !isStagedForRemoval(filename) && !isCommitted(filename)) {
                 System.out.println(filename);
             }
         }
     }
     
+    private static boolean isUntrackedFileExistAndWillBeOverwriten(Commit commit) {
+        List<String> filenames = plainFilenamesIn(CWD);
+        for (String filename : filenames) {
+            if (!isStagedForAddition(filename) && !isCommitted(filename)
+                && !isStagedForRemoval(filename) && commit.hasFile(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private static boolean isUntrackedFileExist() {
         List<String> filenames = plainFilenamesIn(CWD);
         for (String filename : filenames) {
-            if (!isStaged(ADD, filename) && !isCommitted(filename)) {
+            if (!isCommitted(filename) &&
+                    !isStagedForAddition(filename) 
+                    && !isStagedForRemoval(filename)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean isStaged(File area, String filename) {
+    private static boolean isStagedForAddition(String filename) {
         File fileInCWD = join(CWD, filename);
-        File fileInArea = join(area, filename);
+        File fileInArea = join(ADD, filename);
         if (!fileInArea.exists()) {
             return false;
         }
@@ -643,10 +685,15 @@ public class Repository {
         String sha1OfRemove = getSha1OfFile(fileInArea);
         return sha1OfCWD.equals(sha1OfRemove);
     }
+
+    private static boolean isStagedForRemoval(String filename) {
+        File fileInArea = join(REMOVE, filename);
+        return fileInArea.exists();
+    }
     
     private static boolean isCommitted(String filename) {
         Commit commit = getCurrentCommit();
-        return commit.hasFileComparedToCWD(filename);
+        return commit.hasFile(filename);
     }
 
     /** Is commit1 the ancestor of commit2.*/
@@ -666,7 +713,7 @@ public class Repository {
     private static void deleteRedundantFiles(Commit commit) {
         Set<String> keysOfBranch = commit
                 .getFileSnapshot().keySet();
-        Set<String> keysOfHead = getSpecifiedCommit(readContentsAsString(HEAD))
+        Set<String> keysOfHead = getSpecifiedCommit(readContentsAsString(HEAD).substring(0, 40))
                 .getFileSnapshot().keySet();
         
         keysOfHead.removeAll(keysOfBranch);
@@ -689,14 +736,22 @@ public class Repository {
     }
 
     private static void mergeConflict(String filename, String currentSnap, String givenSnap) {
+        if (givenSnap == null) {
+            givenSnap = "null";
+        }
         File currentFile = join(OBJECTS, filename, currentSnap);
         File givenFile = join(OBJECTS, filename, givenSnap);
         byte[] head = "<<<<<<< HEAD\n".getBytes();
         byte[] split = "=======\n".getBytes();
-        byte[] end = ">>>>>>>".getBytes();
+        byte[] end = ">>>>>>>\n".getBytes();
         
         File target = join(CWD, filename);
-        writeContents(target, head, readContents(currentFile), split, 
-                readContents(givenFile), end);
+        if (givenFile.exists()) {
+            writeContents(target, head, readContents(currentFile), split,
+                    readContents(givenFile), end);
+        } else {
+            writeContents(target, head, readContents(currentFile), split, end);
+        }
+        
     }
 }
