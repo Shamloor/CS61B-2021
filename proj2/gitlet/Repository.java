@@ -340,25 +340,20 @@ public class Repository {
                     + "or add and commit it first.");
             return;
         }
-        
         if (ADD.listFiles().length != 0 || REMOVE.listFiles().length != 0) {
             System.out.println("You have uncommitted changes.");
             return;
         }
-        
         if (!join(BRANCHES, givenBranch).exists()) {
             System.out.println("A branch with that name does not exist.");
             return;
         }
-        
         if (readContentsAsString(HEAD).substring(41).equals(givenBranch)) {
             System.out.println("Cannot merge a branch with itself.");
             return;
         }
-        
         Commit currentCommit = getCurrentCommit();
         Commit givenCommit = getSpecifiedCommit(getCommitID(join(BRANCHES, givenBranch)));
-        
         // If given branch is the ancestor of current branch.
         if (isAncestor(givenCommit, currentCommit)) {
             System.out.println("Given branch is an ancestor of the current branch.");
@@ -370,7 +365,6 @@ public class Repository {
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-        
         mergeDetail(givenBranch, currentCommit, givenCommit);
     }
 
