@@ -36,8 +36,8 @@ public class Repository {
     public static void init() {
         // Check the existence of GITLET
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control" +
-                    " system already exists in the current directory.");
+            System.out.println("A Gitlet version-control" 
+                    + " system already exists in the current directory.");
             return;
         }
         
@@ -249,8 +249,8 @@ public class Repository {
         
         // Check the existence of untracked files. 
         if (isUntrackedFileExistAndWillBeOverwriten(branchCommit)) {
-            System.out.println("There is an untracked file in the way; " +
-                    "delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; " 
+                    + "delete it, or add and commit it first.");
             return;
         }
         
@@ -282,7 +282,7 @@ public class Repository {
         
         // Create new branch file.
         File file = join(BRANCHES, branchName);
-        writeContents(file, readContentsAsString(HEAD).substring(0,40));
+        writeContents(file, readContentsAsString(HEAD).substring(0, 40));
         
         // Current commit will be the split point.
         getSpecifiedCommit(readContentsAsString(HEAD).substring(0, 40)).setSplitToTrue();
@@ -313,8 +313,8 @@ public class Repository {
         
         // If untracked file exists.
         if (isUntrackedFileExistAndWillBeOverwriten(commit)) {
-            System.out.println("There is an untracked file in the way; " +
-                    "delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; " 
+                    + "delete it, or add and commit it first.");
             return;
         }
         
@@ -336,8 +336,8 @@ public class Repository {
 
     public static void merge(String givenBranch) {
         if (isUntrackedFileExist()) {
-            System.out.println("There is an untracked file in the way; delete it, " +
-                    "or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it, " 
+                    + "or add and commit it first.");
             return;
         }
         
@@ -371,89 +371,7 @@ public class Repository {
             return;
         }
         
-        // Otherwise, continue with the steps below.
-        // Get split commit.
-        Commit splitCommit = getSplitCommit(currentCommit, givenCommit);
-        
-        Map<String, String> splitMap = splitCommit.getFileSnapshot();
-        Map<String, String> currentMap = currentCommit.getFileSnapshot();
-        Map<String, String> givenMap = givenCommit.getFileSnapshot();
-        
-        Set<String> splitSet = splitMap.keySet();
-        Set<String> currentSet = currentMap.keySet();
-        Set<String> givenSet = givenMap.keySet();
-        
-        boolean hasMergeConflict = false;
-        
-        for (String filename : splitSet) {
-            boolean hasInCurrent = currentSet.contains(filename);
-            boolean hasInGiven = givenSet.contains(filename);
-            
-            
-            if (!hasInCurrent && !hasInGiven) {
-                
-            } else if (hasInCurrent && !hasInGiven &&
-                    splitMap.get(filename).equals(currentMap.get(filename))) {
-                copyFile(join(CWD, filename), REMOVE);
-                removeFile(CWD, filename);
-            } else if (!hasInCurrent && hasInGiven) {
-                // Nothing happens. 
-            } else {
-                String splitSnap = splitMap.get(filename);
-                String currentSnap = currentMap.get(filename);
-                String givenSnap = givenMap.get(filename);
-                
-                boolean cmpCurrentToSplit = splitSnap.equals(currentSnap);
-                boolean cmpGivenToSplit = splitSnap.equals(givenSnap);
-                boolean cmpCurrentToGiven = currentSnap.equals(givenSnap);
-                
-                if (cmpCurrentToSplit && !cmpGivenToSplit) {
-                    givenCommit.copySnapshotToCWD(filename);
-                    copyFile(join(CWD, filename), ADD);
-                } else if (!cmpCurrentToSplit && cmpGivenToSplit) {
-                    // Stay as they are.
-                } else if (!cmpCurrentToSplit && !cmpGivenToSplit) {
-                    if (!cmpCurrentToGiven) {
-                        mergeConflict(filename, currentSnap, givenSnap);
-                        copyFile(join(CWD, filename), ADD);
-                        hasMergeConflict = true;
-                    }
-                }
-            }
-        }
-        
-        // If splitSet does not contain a file.
-        currentSet.removeAll(splitSet);
-        givenSet.removeAll(splitSet);
-
-        Set<String> tmpC = currentSet;
-        Set<String> tmpG = givenSet;
-        
-        tmpC.retainAll(tmpG);
-        for (String filename : tmpC) {
-            String givenSnapshot = givenCommit.getFileSnapshotValue(filename);
-            String currentSnapshot = currentCommit.getFileSnapshotValue(filename);
-            if (!givenSnapshot.equals(currentSnapshot)) {
-                mergeConflict(filename, currentSnapshot, givenSnapshot);
-                hasMergeConflict = true;
-            }
-        }
-        
-        givenSet.removeAll(currentSet);
-        for (String filename : givenSet) {
-            givenCommit.copySnapshotToCWD(filename);
-            copyFile(join(CWD, filename), ADD); 
-        }
-
-        commit("Merged " + givenBranch + " into " + getCurrentBranch() + ".");
-        
-        if (hasMergeConflict) {
-            System.out.println("Encountered a merge conflict.");
-        }
-        
-        Commit commit = getCurrentCommit();
-        commit.setAnotherParent(readContentsAsString(join(BRANCHES, givenBranch)));
-        commitPersistence(commit);
+        mergeDetail(givenBranch, currentCommit, givenCommit);
     }
 
     
@@ -558,7 +476,7 @@ public class Repository {
         return getLatestCommit(list1);
     }
     
-    public static Set<String> findSplitCommit(Commit commit) {
+    private static Set<String> findSplitCommit(Commit commit) {
         Set<String> splitSet = new HashSet<>();
         
         if (commit.getIsSplit()) {
@@ -674,8 +592,8 @@ public class Repository {
     private static void printUntrackedFiles() {
         List<String> filenames = plainFilenamesIn(CWD);
         for (String filename : filenames) {
-            if (!isStagedForAddition(filename) && 
-                    !isStagedForRemoval(filename) && !isCommitted(filename)) {
+            if (!isStagedForAddition(filename) 
+                    && !isStagedForRemoval(filename) && !isCommitted(filename)) {
                 System.out.println(filename);
             }
         }
@@ -695,8 +613,8 @@ public class Repository {
     private static boolean isUntrackedFileExist() {
         List<String> filenames = plainFilenamesIn(CWD);
         for (String filename : filenames) {
-            if (!isCommitted(filename) &&
-                    !isStagedForAddition(filename) 
+            if (!isCommitted(filename) 
+                    && !isStagedForAddition(filename) 
                     && !isStagedForRemoval(filename)) {
                 return true;
             }
@@ -782,5 +700,91 @@ public class Repository {
             writeContents(target, head, readContents(currentFile), split, end);
         }
         
+    }
+    
+    private static void mergeDetail(String givenBranch, Commit currentCommit, Commit givenCommit) {
+        // Otherwise, continue with the steps below.
+        // Get split commit.
+        Commit splitCommit = getSplitCommit(currentCommit, givenCommit);
+
+        Map<String, String> splitMap = splitCommit.getFileSnapshot();
+        Map<String, String> currentMap = currentCommit.getFileSnapshot();
+        Map<String, String> givenMap = givenCommit.getFileSnapshot();
+
+        Set<String> splitSet = splitMap.keySet();
+        Set<String> currentSet = currentMap.keySet();
+        Set<String> givenSet = givenMap.keySet();
+
+        boolean hasMergeConflict = false;
+
+        for (String filename : splitSet) {
+            boolean hasInCurrent = currentSet.contains(filename);
+            boolean hasInGiven = givenSet.contains(filename);
+
+
+            if (!hasInCurrent && !hasInGiven) {
+                continue;
+            } else if (hasInCurrent && !hasInGiven
+                    && splitMap.get(filename).equals(currentMap.get(filename))) {
+                copyFile(join(CWD, filename), REMOVE);
+                removeFile(CWD, filename);
+            } else if (!hasInCurrent && hasInGiven) {
+                continue;
+            } else {
+                String splitSnap = splitMap.get(filename);
+                String currentSnap = currentMap.get(filename);
+                String givenSnap = givenMap.get(filename);
+
+                boolean cmpCurrentToSplit = splitSnap.equals(currentSnap);
+                boolean cmpGivenToSplit = splitSnap.equals(givenSnap);
+                boolean cmpCurrentToGiven = currentSnap.equals(givenSnap);
+
+                if (cmpCurrentToSplit && !cmpGivenToSplit) {
+                    givenCommit.copySnapshotToCWD(filename);
+                    copyFile(join(CWD, filename), ADD);
+                } else if (!cmpCurrentToSplit && cmpGivenToSplit) {
+                    continue;
+                } else if (!cmpCurrentToSplit && !cmpGivenToSplit) {
+                    if (!cmpCurrentToGiven) {
+                        mergeConflict(filename, currentSnap, givenSnap);
+                        copyFile(join(CWD, filename), ADD);
+                        hasMergeConflict = true;
+                    }
+                }
+            }
+        }
+
+        // If splitSet does not contain a file.
+        currentSet.removeAll(splitSet);
+        givenSet.removeAll(splitSet);
+
+        Set<String> tmpC = currentSet;
+        Set<String> tmpG = givenSet;
+
+        tmpC.retainAll(tmpG);
+        for (String filename : tmpC) {
+            String givenSnapshot = givenCommit.getFileSnapshotValue(filename);
+            String currentSnapshot = currentCommit.getFileSnapshotValue(filename);
+            if (!givenSnapshot.equals(currentSnapshot)) {
+                mergeConflict(filename, currentSnapshot, givenSnapshot);
+                hasMergeConflict = true;
+            }
+        }
+
+        givenSet.removeAll(currentSet);
+        for (String filename : givenSet) {
+            givenCommit.copySnapshotToCWD(filename);
+            copyFile(join(CWD, filename), ADD);
+        }
+
+        commit("Merged " + givenBranch + " into " + getCurrentBranch() + ".");
+
+        if (hasMergeConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+
+        Commit commit = getCurrentCommit();
+        commit.setAnotherParent(readContentsAsString(join(BRANCHES, givenBranch)));
+        commitPersistence(commit);
     }
 }

@@ -51,7 +51,7 @@ public class Commit implements Serializable {
     }
     
     public void addOrModifyMapKV(String filename, String snapshot) {
-        if (!fileSnapshot.containsKey(filename)){
+        if (!fileSnapshot.containsKey(filename)) {
             fileSnapshot.put(filename, snapshot);
         } else {
             fileSnapshot.replace(filename, snapshot);
