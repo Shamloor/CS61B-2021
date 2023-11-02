@@ -20,8 +20,8 @@ public class Commit implements Serializable {
     private String anotherParent;
     private boolean isSplit = false;
 
-    private SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH" +
-            ":mm:ss yyyy Z", Locale.ENGLISH);
+    private SimpleDateFormat d = new SimpleDateFormat("E MMM dd HH" 
+            + ":mm:ss yyyy Z", Locale.ENGLISH);
     
     public Commit(String message, String parent) {
         this.message = message;
