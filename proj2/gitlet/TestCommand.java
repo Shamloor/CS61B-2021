@@ -1,12 +1,14 @@
 package gitlet;
-import static gitlet.Utils.*;
-import static gitlet.Utils.readContents;
-import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+import static gitlet.Repository.*;
+
+import static gitlet.Utils.*;
 
 public class TestCommand {
     
@@ -46,8 +48,12 @@ public class TestCommand {
     
     @Test
     public void testTestC() {
-        File a = join(Repository.CWD, "a");
-        System.out.println(readContents(a));
+        Set<String> set1 = new HashSet<>();
+        Set<String> set2 = new HashSet<>();
+        
+        set1.add(null);
+        set1.add("1");
+        System.out.println(set1);
     }
     
     @Test
@@ -89,6 +95,31 @@ public class TestCommand {
         //Repository.merge("C1");
         Repository.globalLog();
         
+    }
+    
+    @Test
+    public void integrationTest3() {
+        init();
+        
+        branch("B1");
+        branch("B2");
+        
+        checkout3("B1");
+        add("test");
+        commit("B1 second node");
+        
+        checkout3("B2");
+        add("test1");
+        commit("B2 second node");
+        
+        branch("C1");
+        add("test2");
+        commit("B2 third node");
+        
+        checkout3("B1");
+        merge("C1");
+        
+        merge("B2");
     }
     
     @Test

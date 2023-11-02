@@ -367,6 +367,7 @@ public class Repository {
         // If current branch is the ancestor of given branch.
         if (isAncestor(currentCommit, givenCommit)) {
             checkout3(givenBranch);
+            System.out.println("Current branch fast-forwarded.");
             return;
         }
         
@@ -425,6 +426,19 @@ public class Repository {
         currentSet.removeAll(splitSet);
         givenSet.removeAll(splitSet);
 
+        Set<String> tmpC = currentSet;
+        Set<String> tmpG = givenSet;
+        
+        tmpC.retainAll(tmpG);
+        for (String filename : tmpC) {
+            String givenSnapshot = givenCommit.getFileSnapshotValue(filename);
+            String currentSnapshot = currentCommit.getFileSnapshotValue(filename);
+            if (!givenSnapshot.equals(currentSnapshot)) {
+                mergeConflict(filename, currentSnapshot, givenSnapshot);
+                hasMergeConflict = true;
+            }
+        }
+        
         givenSet.removeAll(currentSet);
         for (String filename : givenSet) {
             givenCommit.copySnapshotToCWD(filename);
@@ -536,31 +550,46 @@ public class Repository {
         List<String> list1 = new ArrayList<>();
         List<String> list2 = new ArrayList<>();
         
-        while (true) {
-            if (currentCommit.getIsSplit()) {
-                list1.add(currentCommit.getCommitID());
-            }
-            if (currentCommit.getParent() == null) {
-                break;
-            }
-            currentCommit = getSpecifiedCommit(currentCommit.getParent());
-        }
+        list1.addAll(findSplitCommit(currentCommit));
 
-        while (true) {
-            if (givenCommit.getIsSplit()) {
-                list2.add(givenCommit.getCommitID());
-            }
-            if (givenCommit.getParent() == null) {
-                break;
-            }
-            givenCommit = getSpecifiedCommit(givenCommit.getParent());
-        }
+        list2.addAll(findSplitCommit(givenCommit));
         
         list1.retainAll(list2);
-        return getSpecifiedCommit(list1.get(0));
+        return getLatestCommit(list1);
     }
     
-    
+    public static Set<String> findSplitCommit(Commit commit) {
+        Set<String> splitSet = new HashSet<>();
+        
+        if (commit.getIsSplit()) {
+            splitSet.add(commit.getCommitID());
+        }
+
+        if (commit.getParent() == null) {
+            return splitSet;
+        }
+        
+        if (commit.getAnotherParent() != null) {
+            splitSet.addAll(findSplitCommit
+                    (getSpecifiedCommit(commit.getAnotherParent())));
+        }
+        
+        splitSet.addAll(findSplitCommit(getSpecifiedCommit(commit.getParent())));
+        return splitSet;
+    }
+
+    private static Commit getLatestCommit(List<String> commitIDs) {
+        Commit latestCommit = getSpecifiedCommit(commitIDs.get(0));
+        for (String commitID : commitIDs) {
+            Commit commit = getSpecifiedCommit(commitID);
+            if (commit.getDate().after(latestCommit.getDate())) {
+                latestCommit = commit;
+            }
+        }
+        return latestCommit;
+    }
+
+
     private static void changeHead(Commit commit) {
         if (!HEAD.exists()) {
             writeContents(HEAD, commit.getCommitID() + " master");

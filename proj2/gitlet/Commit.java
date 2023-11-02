@@ -16,11 +16,7 @@ public class Commit implements Serializable {
     private String parent;
     private Map<String, String> fileSnapshot = new HashMap<>();
     private String commitID;
-    private String date;
-    private int add;
-    private int delete;
-    private int modify;
-    
+    private Date date;
     private String anotherParent;
     private boolean isSplit = false;
 
@@ -31,11 +27,11 @@ public class Commit implements Serializable {
         this.message = message;
         this.parent = parent;
         if (this.parent == null) {
-            date = d.format(new Date(0));
+            date = new Date(0);
         } else {
-            date = d.format(new Date());
+            date = new Date();
         }
-        commitID = sha1(this.message, this.date);
+        commitID = sha1(this.message, d.format(this.date));
     }
 
     public String getCommitID() {
@@ -57,16 +53,13 @@ public class Commit implements Serializable {
     public void addOrModifyMapKV(String filename, String snapshot) {
         if (!fileSnapshot.containsKey(filename)){
             fileSnapshot.put(filename, snapshot);
-            add ++;
         } else {
             fileSnapshot.replace(filename, snapshot);
-            modify ++;
         }
     }
     
     public void removeMapKV(String filename) {
         fileSnapshot.remove(filename);
-        delete ++;
     }
     
     public boolean hasFileComparedToCWD(String filename) {
@@ -90,6 +83,14 @@ public class Commit implements Serializable {
         return fileSnapshot.get(filename);
     }
     
+    public Date getDate() {
+        return this.date;
+    }
+    
+    public String getAnotherParent() {
+        return this.anotherParent;
+    }
+    
     public void printLog() {
         System.out.println("===");
         System.out.println("commit " + commitID);
@@ -98,7 +99,7 @@ public class Commit implements Serializable {
                     + " " + anotherParent.substring(0, 7));
         }
         
-        System.out.println("Date: " + date);
+        System.out.println("Date: " + d.format(date));
         System.out.println(message);
         System.out.println();
     }
