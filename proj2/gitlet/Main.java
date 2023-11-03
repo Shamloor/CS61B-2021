@@ -20,7 +20,7 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             case "commit":
-                if (args.length == 1) {
+                if (args.length == 1 || args[1].length() == 0) {
                     System.out.println("Please enter a commit message.");
                     return;
                 }
