@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gitlet.Utils.*;
+import static gitlet.Directory.*;
 
 /** Represents a gitlet commit object.
  *
@@ -46,7 +47,7 @@ public class Commit implements Serializable {
         if (parent == null) {
             return;
         }
-        File parentCommitFile = join(Repository.COMMITS, parent);
+        File parentCommitFile = join(COMMITS, parent);
         fileSnapshot = readObject(parentCommitFile, Commit.class).fileSnapshot;
     }
     
@@ -63,7 +64,7 @@ public class Commit implements Serializable {
     }
     
     public boolean hasFileComparedToCWD(String filename) {
-        File fileInCWD = join(Repository.CWD, filename);
+        File fileInCWD = join(CWD, filename);
         String sha1OfCWD = getSha1OfFile(fileInCWD);
         if (fileSnapshot.containsKey(filename)) {
             String sha1OfCommit = fileSnapshot.get(filename);
@@ -111,9 +112,9 @@ public class Commit implements Serializable {
     }
     
     public void copySnapshotToCWD(String filename) {
-        File targetFile = join(Repository.CWD, filename);
+        File targetFile = join(CWD, filename);
         String snapshot = fileSnapshot.get(filename);
-        File sourceFile = join(Repository.OBJECTS, filename, snapshot);
+        File sourceFile = join(OBJECTS, filename, snapshot);
         writeContents(targetFile, readContents(sourceFile));
     }
     

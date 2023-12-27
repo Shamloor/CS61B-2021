@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.*;
 
 import static gitlet.Utils.*;
+import static gitlet.Directory.*;
+
 
 /** Represents a gitlet repository.
  *  @author Willson Yu
@@ -22,350 +24,65 @@ public class Repository {
      *  |---branches
      *  |---HEAD
      * */
-    public static final File CWD = new File(System.getProperty("user.dir"));
-    public static final File GITLET_DIR = join(CWD, ".gitlet");
-    public static final File OBJECTS = join(GITLET_DIR, "objects");
-    public static final File AREA  = join(GITLET_DIR, "area");
-    public static final File BRANCHES = join(GITLET_DIR, "branches");
-    /** The second line will store current branch. */
-    public static final File HEAD = join(GITLET_DIR, "HEAD");
-    public static final File COMMITS = join(OBJECTS, "commits");
-    public static final File ADD = join(AREA, "add");
-    public static final File REMOVE = join(AREA, "remove");
-    
+ 
     public static void init() {
-        // Check the existence of GITLET
-        if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control" 
-                    + " system already exists in the current directory.");
-            return;
-        }
-        
-        // Create folders.
-        initailizeFolders();
-        
-        // create Commit object initial commit and print out message.
-        Commit commit = createNewCommit("initial commit");
-        
-        // Persistence of Initial commit.
-        commitPersistence(commit);
-        
-        // HEAD pointer points to initial commit.
-        changeHead(commit);
-        
-        // Branch pointer master points to initial commit.
-        branch("master");
+        InitCommand.init();
     }
 
     public static void add(String filename) {
-        // Find file in working directory and check its existence.
-        if (!hasFileInFolder(CWD, filename)) {
-            System.out.println("File does not exist.");
-            return;
-        }
-        
-        // If the version of current file is identical to the version in current commit,
-        // do not stage it to add area, and remove the file in add area.
-        Commit commit = getCurrentCommit();
-        if (commit.hasFileComparedToCWD(filename)) {
-            removeFile(REMOVE, filename);
-            
-            // Else copy the file to add area whether this file exists in add area.    
-        } else {
-            File file = join(CWD, filename);
-            copyFile(file, ADD);
-        }
+        AddCommand.add(filename);
     }
 
     public static void commit(String message) {
-        // Check the area folder, if both of add and remove are empty.
-        if (ADD.listFiles().length == 0 && REMOVE.listFiles().length == 0) {
-            System.out.println("No changes added to the commit.");
-            return;
-        }
-        
-        // Create a new Commit object.
-        Commit commit = createNewCommit(message);
-
-        // Create snapshot of files and clear both areas.
-        // Modify fileSnapshot variable from add area and remove area.
-        // Clear both areas.
-        createSnapshotOfFile(commit);
-        removeSnapshotOfFile(commit);
-        
-        // Persistence of new commit.
-        commitPersistence(commit);
-        
-        // HEAD points to new commit.
-        changeHead(commit);
-        
-        // Current branch points to new commit.
-        writeContents(join(BRANCHES, getCurrentBranch()), commit.getCommitID());
+        CommitCommand.commit(message);
     }
 
     public static void rm(String filename) {
-        Commit commit = getCurrentCommit();
-        // If one file is currently in add area, just remove it.
-        if (hasFileInFolder(ADD, filename)) {
-            removeFile(ADD, filename);
-            
-            // Else if current commit contains this file and has the same snapshot,
-            // stage it for removal and remove the file from working directory.
-        } else if (hasFileInCommit(commit, filename)) {
-            if (!join(CWD, filename).exists()) {
-                commit.copySnapshotToCWD(filename);
-            }
-            if (hasSameSnapshot(commit, filename)) {
-                copyFile(join(CWD, filename), REMOVE);
-                removeFile(CWD, filename);
-            }
-
-            // Else print out error message
-        } else {
-            System.out.println("No reason to remove the file.");
-        }
+        RmCommand.rm(filename);
     }
 
     public static void log() {
-        // Get current Commit object.
-        Commit commit = getCurrentCommit();
-        
-        // Print log.
-        while (true) {
-            commit.printLog();
-            if (commit.getParent() == null) {
-                break;
-            }
-            commit = getSpecifiedCommit(commit.getParent());
-        }
+        LogCommand.log();
     }
 
     public static void globalLog() {
-        // Get commits in COMMITS
-        List<Commit> commits = getCommits();
-        
-        // Loop: call printLog() function.
-        for (Commit commit : commits) {
-            commit.printLog();
-        }
+        LogCommand.globalLog();
     }
 
     public static void find(String commitMessage) {
-        // Get commits in COMMITS
-        List<Commit> commits = getCommits();
-        boolean hasMessage = false;
-        
-        // Loop: get message variable of Commit object and compare strings.
-        for (Commit commit : commits) {
-            if (commitMessage.equals(commit.getMessage())) {
-                System.out.println(commit.getCommitID());
-                hasMessage = true;
-            }
-        }
-        
-        // If no message exists.
-        if (!hasMessage) {
-            System.out.println("Found no commit with that message.");
-        }
+        FindCommand.find(commitMessage);
     }
 
     public static void status() {
-        if (!GITLET_DIR.exists()) {
-            System.out.println("Not in an initialized Gitlet directory.");
-            return;
-        }
-        
-        System.out.println("=== Branches ===");
-        // Print branches.
-        printBranches();
-
-        System.out.println("=== Staged Files ===");
-        // Print files in add area.
-        printFiles(ADD);
-
-        System.out.println("=== Removed Files ===");
-        // Print files in remove area.
-        printFiles(REMOVE);
-
-        System.out.println("=== Modifications Not Staged For Commit ===");
-        // Print files modified but not be staged for commit.
-        printComparedFilesInCommitAndCWD();
-
-        System.out.println("=== Untracked Files ===");
-        // Print untracked files.
-        printUntrackedFiles();
+        StatusCommand.status();
     }
 
     public static void checkout1(String filename) {
-        Commit commit = getCurrentCommit();
-        // Check the existence of file in current commit.
-        if (!commit.hasFile(filename)) {
-            System.out.println("File does not exist in that commit.");
-            return;
-        }
-        
-        // Find the snapshot of file and copy the contents to CWD.
-        commit.copySnapshotToCWD(filename);
+        CheckoutCommand.checkout1(filename);
     }
 
     public static void checkout2(String commitID, String filename) {
-        // Get specified commit.
-        Commit commit = getSpecifiedCommit(commitID);
-        
-        // If no commit with the given id exists.
-        if (commit == null) {
-            System.out.println("No commit with that id exists.");
-            return;
-        }
-
-        // Check the existence of file in current commit.
-        if (!commit.hasFile(filename)) {
-            System.out.println("File does not exist in that commit.");
-            return;
-        }
-        
-        // Find the snapshot of file and copy the contents to CWD.
-        commit.copySnapshotToCWD(filename);
+        CheckoutCommand.checkout2(commitID, filename);
     }
 
     public static void checkout3(String branchName) {
-        // Check the existence of branch and 
-        if (!hasFileInFolder(BRANCHES, branchName)) {
-            System.out.println("No such branch exists.");
-            return;
-        }
-        
-        // Whether head and branch is the same.
-        if (getCurrentBranch().equals(branchName)) {
-            System.out.println("No need to checkout the current branch.");
-            return;
-        }
-
-        // Get of commitID from branch.
-        String branchCommitID = readContentsAsString(join(BRANCHES, branchName));
-
-        // Get specified commit.
-        Commit branchCommit = getSpecifiedCommit(branchCommitID);
-        
-        // Check the existence of untracked files. 
-        if (isUntrackedFileExistAndWillBeOverwriten(branchCommit)) {
-            System.out.println("There is an untracked file in the way; " 
-                    + "delete it, or add and commit it first.");
-            return;
-        }
-        
-        
-        
-        // Copy all files to CWD.
-        branchCommit.copyAllSnapshotsInCommitToCWD();
-
-        // Delete all the files in current branch but aren't present in checked-out branch.
-        deleteRedundantFiles(branchCommit);
-        
-        // Change HEAD file.
-        changeHead(branchCommit, branchName);
-        
-        // Clear staging area.
-        clearStagingArea();
+        CheckoutCommand.checkout3(branchName);
     }
 
     public static void branch(String branchName) {
-        // Check the existence of branch named arg.
-        if (hasFileInFolder(BRANCHES, branchName)) {
-            System.out.println("A branch with that name already exists.");
-        }
-        
-        // Turn isSplit to True.
-        Commit commit = getCurrentCommit();
-        commit.setSplitToTrue();
-        commitPersistence(commit);
-        
-        // Create new branch file.
-        File file = join(BRANCHES, branchName);
-        writeContents(file, readContentsAsString(HEAD).substring(0, 40));
-        
-        // Current commit will be the split point.
-        getSpecifiedCommit(readContentsAsString(HEAD).substring(0, 40)).setSplitToTrue();
+        BranchCommand.branch(branchName);
     }
 
     public static void rmBranch(String branchName) {
-        // Check the existence of branch named arg.
-        if (!hasFileInFolder(BRANCHES, branchName)) {
-            System.out.println("A branch with that name does not exist.");
-        }
-        
-        // Check weather this branch is current branch.
-        if (branchName.equals(getCurrentBranch())) {
-            System.out.println("Cannot remove the current branch.");
-        }
-        
-        // Delete the file named branchName.
-        removeFile(BRANCHES, branchName);
+        RmBranchCommand.rmBranch(branchName);
     }
 
     public static void reset(String commmitID) {
-        // Check the existence of commit.
-        Commit commit = getSpecifiedCommit(commmitID);
-        if (commit == null) {
-            System.out.println("No commit with that id exists.");
-            return;
-        }
-        
-        // If untracked file exists.
-        if (isUntrackedFileExistAndWillBeOverwriten(commit)) {
-            System.out.println("There is an untracked file in the way; " 
-                    + "delete it, or add and commit it first.");
-            return;
-        }
-        
-        // Copy all tracked files from commit to CWD.
-        commit.copyAllSnapshotsInCommitToCWD();
-        
-        // Delete redundant files.
-        deleteRedundantFiles(commit);
-        
-        // Clear staging area.
-        clearStagingArea();
-        
-        // Change head.
-        changeHead(commit);
-        
-        // Change current branch.
-        writeContents(join(BRANCHES, getCurrentBranch()), commit.getCommitID());
+        ResetCommand.reset(commmitID);
     }
 
     public static void merge(String givenBranch) {
-        if (isUntrackedFileExist()) {
-            System.out.println("There is an untracked file in the way; delete it, " 
-                    + "or add and commit it first.");
-            return;
-        }
-        if (ADD.listFiles().length != 0 || REMOVE.listFiles().length != 0) {
-            System.out.println("You have uncommitted changes.");
-            return;
-        }
-        if (!join(BRANCHES, givenBranch).exists()) {
-            System.out.println("A branch with that name does not exist.");
-            return;
-        }
-        if (readContentsAsString(HEAD).substring(41).equals(givenBranch)) {
-            System.out.println("Cannot merge a branch with itself.");
-            return;
-        }
-        Commit currentCommit = getCurrentCommit();
-        Commit givenCommit = getSpecifiedCommit(getCommitID(join(BRANCHES, givenBranch)));
-        // If given branch is the ancestor of current branch.
-        if (isAncestor(givenCommit, currentCommit)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            return;
-        }
-        // If current branch is the ancestor of given branch.
-        if (isAncestor(currentCommit, givenCommit)) {
-            checkout3(givenBranch);
-            System.out.println("Current branch fast-forwarded.");
-            return;
-        }
-        mergeDetail(givenBranch, currentCommit, givenCommit);
+        MergeCommand.merge(givenBranch);
     }
 
     
@@ -603,6 +320,11 @@ public class Repository {
         }
         return false;
     }
+
+    public static boolean isCommitted(String filename) {
+        Commit commit = getCurrentCommit();
+        return commit.hasFile(filename);
+    }
     
     private static boolean isUntrackedFileExist() {
         List<String> filenames = plainFilenamesIn(CWD);
@@ -632,10 +354,7 @@ public class Repository {
         return fileInArea.exists();
     }
     
-    private static boolean isCommitted(String filename) {
-        Commit commit = getCurrentCommit();
-        return commit.hasFile(filename);
-    }
+    
 
     /** Is commit1 the ancestor of commit2.*/
     private static boolean isAncestor(Commit commit1, Commit commit2) {

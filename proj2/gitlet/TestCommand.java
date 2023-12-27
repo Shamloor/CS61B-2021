@@ -6,10 +6,11 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-import static gitlet.Repository.*;
+
 
 import static gitlet.Utils.*;
-
+import static gitlet.Directory.*;
+import static gitlet.Repository.*;
 public class TestCommand {
     
     @Test
@@ -124,13 +125,13 @@ public class TestCommand {
     
     @Test
     public void mergeConflict() {
-        File currentFile = join(Repository.CWD, "test1");
-        File givenFile = join(Repository.CWD, "test2");
+        File currentFile = join(CWD, "test1");
+        File givenFile = join(CWD, "test2");
         byte[] head = "<<<<<<< HEAD\n".getBytes();
         byte[] split = "=======\n".getBytes();
         byte[] end = ">>>>>>>".getBytes();
 
-        File target = join(Repository.CWD, "test");
+        File target = join(CWD, "test");
         writeContents(target, head, readContents(currentFile), split,
                 readContents(givenFile), end);
     }
