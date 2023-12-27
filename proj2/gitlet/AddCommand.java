@@ -4,7 +4,7 @@ import java.io.File;
 
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class AddCommand {
     public static void add(String filename) {

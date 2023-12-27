@@ -1,7 +1,7 @@
 package gitlet;
 
 import java.util.List;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class FindCommand {
     public static void find(String commitMessage) {

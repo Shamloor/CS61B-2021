@@ -10,7 +10,7 @@ import static gitlet.Utils.*;
 import static gitlet.Directory.*;
 
 
-public class CommitProcess {
+public class Process {
     public static Commit createNewCommit(String message) {
         Commit commit = new Commit(message, getCommitID(HEAD));
         commit.inheritParentMap();
@@ -143,6 +143,19 @@ public class CommitProcess {
         return latestCommit;
     }
 
+    public static void deleteRedundantFiles(Commit commit) {
+        Set<String> keysOfBranch = commit
+                .getFileSnapshot().keySet();
+        Set<String> keysOfHead = getSpecifiedCommit(readContentsAsString(HEAD).substring(0, 40))
+                .getFileSnapshot().keySet();
+
+        keysOfHead.removeAll(keysOfBranch);
+
+        for (String filename : keysOfHead) {
+            join(CWD, filename).delete();
+        }
+    }
+
     public static boolean isStagedForAddition(String filename) {
         File fileInCWD = join(CWD, filename);
         File fileInArea = join(ADD, filename);
@@ -159,16 +172,7 @@ public class CommitProcess {
         return fileInArea.exists();
     }
 
-    public static boolean isUntrackedFileExistAndWillBeOverwriten(Commit commit) {
-        List<String> filenames = plainFilenamesIn(CWD);
-        for (String filename : filenames) {
-            if (!isStagedForAddition(filename) && !isCommitted(filename)
-                    && !isStagedForRemoval(filename) && commit.hasFile(filename)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    
 
     public static void clearStagingArea() {
         File[] addFiles = ADD.listFiles();
@@ -194,6 +198,17 @@ public class CommitProcess {
         return false;
     }
 
+    public static boolean isUntrackedFileExistAndWillBeOverwriten(Commit commit) {
+        List<String> filenames = plainFilenamesIn(CWD);
+        for (String filename : filenames) {
+            if (!isStagedForAddition(filename) && !isCommitted(filename)
+                    && !isStagedForRemoval(filename) && commit.hasFile(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void changeHead(Commit commit) {
         if (!HEAD.exists()) {
             writeContents(HEAD, commit.getCommitID() + " master");
@@ -212,16 +227,5 @@ public class CommitProcess {
         return readContentsAsString(HEAD).substring(41);
     }
 
-    public static void deleteRedundantFiles(Commit commit) {
-        Set<String> keysOfBranch = commit
-                .getFileSnapshot().keySet();
-        Set<String> keysOfHead = getSpecifiedCommit(readContentsAsString(HEAD).substring(0, 40))
-                .getFileSnapshot().keySet();
-
-        keysOfHead.removeAll(keysOfBranch);
-
-        for (String filename : keysOfHead) {
-            join(CWD, filename).delete();
-        }
-    }
+    
 }

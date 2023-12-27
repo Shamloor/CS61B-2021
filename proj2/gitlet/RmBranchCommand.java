@@ -3,7 +3,7 @@ package gitlet;
 
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class RmBranchCommand {
     public static void rmBranch(String branchName) {

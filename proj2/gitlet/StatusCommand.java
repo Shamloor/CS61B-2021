@@ -6,7 +6,7 @@ import java.util.Map;
 
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 
 public class StatusCommand {
@@ -56,7 +56,7 @@ public class StatusCommand {
         System.out.println();
     }
 
-    private static void printComparedFilesInAddandCWD() {
+    private static void printComparedFilesInAddAndCWD() {
         File[] filesInAdd = ADD.listFiles();
         List<String> filenames = plainFilenamesIn(CWD);
         for (File file : filesInAdd) {
@@ -81,7 +81,7 @@ public class StatusCommand {
             } else if (fileInCWD.exists() && !fileSnapshot.get(filename).equals(snapshot)) {
                 System.out.println(filename + " (modified)");
             } else {
-                printComparedFilesInAddandCWD();
+                printComparedFilesInAddAndCWD();
             }
         }
         System.out.println();

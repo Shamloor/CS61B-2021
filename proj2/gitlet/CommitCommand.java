@@ -2,7 +2,7 @@ package gitlet;
 
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class CommitCommand {
     public static void commit(String message) {

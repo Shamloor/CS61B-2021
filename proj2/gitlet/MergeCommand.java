@@ -6,7 +6,7 @@ import java.util.*;
 import static gitlet.CheckoutCommand.checkout3;
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class MergeCommand {
     public static void merge(String givenBranch) {

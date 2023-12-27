@@ -2,7 +2,7 @@ package gitlet;
 
 import static gitlet.Utils.*;
 import static gitlet.Directory.*;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 
 public class CheckoutCommand {
     public static void checkout1(String filename) {

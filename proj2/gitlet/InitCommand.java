@@ -1,9 +1,8 @@
 package gitlet;
 
-import static gitlet.BranchCommand.branch;
-import static gitlet.CommitProcess.*;
+import static gitlet.Process.*;
 import static gitlet.Directory.*;
-import static gitlet.Utils.join;
+
 
 public class InitCommand {
     public static void init() {
@@ -25,9 +24,6 @@ public class InitCommand {
 
         // HEAD pointer points to initial commit.
         changeHead(commit);
-
-        // Branch pointer master points to initial commit.
-        branch("master");
     }
     
     private static void initailizeFolders() {
