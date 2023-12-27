@@ -14,8 +14,8 @@ import java.util.Random;
 public class HexWorld {
     private static final int WIDTH = 50;
     private static final int HEIGHT = 50;
-    private static final Random random = new Random(575);
-    private static TETile[][] tiles = new TETile[WIDTH][HEIGHT];
+    private static final Random random = new Random(375);
+    private static final TETile[][] tiles = new TETile[WIDTH][HEIGHT];
     
     public static void addHexagon(int sideLength, int xPos, int yPos, TETile sample) {
         int tmpX = xPos, tmpY = yPos;
